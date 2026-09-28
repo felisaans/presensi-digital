@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Presensi Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4D5DFA; --primary-dark: #3b48c9; --primary-light: #e0e4ff;
+            --bg: #F7F9FC; --card-bg: #FFFFFF; --text-main: #1E293B; --text-muted: #64748B;
+            --success: #10B981; --danger: #EF4444; --warning: #F59E0B; --info: #3B82F6;
+            --border-radius-card: 20px; --border-radius-btn: 12px;
+            --shadow: 0 8px 24px rgba(77, 93, 250, 0.08);
+            --shadow-hover: 0 12px 32px rgba(77, 93, 250, 0.15);
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text-main); overflow-x: hidden; }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-primary { color: var(--primary); }
+        .text-muted { color: var(--text-muted); }
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        .text-warning { color: var(--warning); }
+        .font-semibold { font-weight: 600; } .font-bold { font-weight: 700; }
+        .mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; } .mb-2 { margin-bottom: 1rem; } .mb-3 { margin-bottom: 1.5rem; }
+        .flex { display: flex; } .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; } .gap-1 { gap: 8px; } .gap-2 { gap: 16px; }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; border-radius: var(--border-radius-btn); font-weight: 600; cursor: pointer; border: none; transition: var(--transition); text-decoration: none; gap: 8px; font-size: 0.95rem; }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+        .btn-primary { background-color: var(--primary); color: white; box-shadow: var(--shadow); width: 100%; }
+        .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+        .btn-secondary { background-color: var(--primary-light); color: var(--primary); width: 100%; }
+        .btn-danger { background-color: #FEE2E2; color: var(--danger); width: 100%; }
+        .btn-outline { background-color: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+        .btn-outline-danger { background-color: transparent; color: var(--danger); border: 1.5px solid var(--danger); }
+        .btn-outline-muted { background-color: transparent; color: var(--text-muted); border: 1.5px solid #E2E8F0; }
+        .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+        .input-group { margin-bottom: 1rem; text-align: left; }
+        .input-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .input-control { width: 100%; padding: 14px 16px; border-radius: var(--border-radius-btn); border: 1px solid #E2E8F0; background-color: rgba(248, 250, 252, 0.9); font-size: 0.95rem; color: var(--text-main); transition: var(--transition); outline: none; }
+        .input-control:focus { border-color: var(--primary); background-color: #FFFFFF; box-shadow: 0 0 0 3px var(--primary-light); }
+        select.input-control { appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 16px top 50%; background-size: 10px auto; padding-right: 40px; }
+
+        .view-container { min-height: 100vh; display: flex; flex-direction: column; }
+
+        #landing-view { background: linear-gradient(135deg, var(--primary) 0%, #7B88FF 100%); align-items: center; justify-content: center; position: relative; padding: 20px; }
+        .landing-decorative { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); top: -50px; left: -100px; z-index: 0; }
+        .landing-decorative-2 { position: absolute; width: 200px; height: 200px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); bottom: 50px; right: -50px; z-index: 0; border: 2px dashed rgba(255, 255, 255, 0.2); }
+        .btn-lecturer-top { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); z-index: 10; font-size: 0.85rem; padding: 8px 16px; width: auto; }
+        .btn-lecturer-top:hover { background: rgba(255, 255, 255, 0.3); }
+        .landing-card { background-color: rgba(255, 255, 255, 0.25); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15); padding: 40px 30px; border-radius: var(--border-radius-card); width: 100%; max-width: 420px; z-index: 1; text-align: center; }
+        .landing-icon { font-size: 3rem; color: var(--primary); margin-bottom: 10px; }
+
+        .app-container { max-width: 800px; margin: 0 auto; width: 100%; padding-bottom: 90px; }
+        .app-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 20px 16px; background-color: var(--bg); position: sticky; top: 0; z-index: 10; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; }
+        .user-text h2 { font-size: 1.1rem; line-height: 1.2; }
+        .user-text p { font-size: 0.8rem; color: var(--text-muted); }
+        .header-actions { display: flex; gap: 8px; }
+        .header-actions .icon-btn { background: white; border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text-main); box-shadow: var(--shadow); cursor: pointer; font-size: 1.1rem; transition: var(--transition); }
+        .header-actions .icon-btn:hover { color: var(--primary); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--card-bg); box-shadow: 0 -4px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); z-index: 100; border-top-left-radius: 24px; border-top-right-radius: 24px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; font-size: 0.75rem; font-weight: 500; transition: var(--transition); cursor: pointer; }
+        .nav-item i { font-size: 1.2rem; transition: var(--transition); }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-2px); }
+
+        .content-section { padding: 0 20px; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title { font-size: 1.1rem; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .summary-card { background-color: var(--card-bg); padding: 12px; border-radius: 16px; box-shadow: var(--shadow); text-align: center; }
+        .summary-card h3 { font-size: 1.2rem; color: var(--primary); margin-bottom: 2px; }
+        .summary-card p { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; line-height: 1.1; }
+        .sc-danger h3 { color: var(--danger); } .sc-warning h3 { color: var(--warning); } .sc-success h3 { color: var(--success); }
+
+        .next-class-card { background: linear-gradient(135deg, var(--primary) 0%, #7B88FF 100%); border-radius: var(--border-radius-card); padding: 20px; color: white; margin-bottom: 24px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .next-class-card::after { content: '\f518'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: -10px; bottom: -20px; font-size: 8rem; opacity: 0.1; }
+
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .feature-card { background-color: var(--fc-bg, var(--card-bg)); padding: 20px 16px; border-radius: var(--border-radius-card); box-shadow: var(--shadow); text-align: center; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 1px solid rgba(0,0,0,0.02); }
+        .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); background-color: var(--fc-hover-bg, var(--primary)); color: white; border-color: transparent; }
+        .feature-icon { width: 48px; height: 48px; background-color: var(--fc-icon-bg, var(--primary-light)); color: var(--fc-icon-color, var(--primary)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: var(--transition); }
+        .feature-card:hover .feature-icon { background-color: rgba(255,255,255,0.2); color: white; }
+        .feature-card h4 { font-size: 0.95rem; }
+        .feature-card p { font-size: 0.7rem; color: var(--text-muted); transition: var(--transition); line-height: 1.2; }
+        .feature-card:hover p { color: rgba(255,255,255,0.9); }
+
+        .fc-color-1 { --fc-bg: #E8EDFF; --fc-icon-bg: #D1DCFF; --fc-icon-color: #4D5DFA; --fc-hover-bg: #4D5DFA; }
+        .fc-color-2 { --fc-bg: #ECE8FF; --fc-icon-bg: #D7CCFF; --fc-icon-color: #6347FF; --fc-hover-bg: #6347FF; }
+        .fc-color-3 { --fc-bg: #F3E8FF; --fc-icon-bg: #E5CDFF; --fc-icon-color: #9333EA; --fc-hover-bg: #9333EA; }
+        .fc-color-4 { --fc-bg: #F9E8FF; --fc-icon-bg: #F0CDFF; --fc-icon-color: #B233EA; --fc-hover-bg: #B233EA; }
+        .fc-color-5 { --fc-bg: #E0F2FE; --fc-icon-bg: #BAE6FD; --fc-icon-color: #0284C7; --fc-hover-bg: #0284C7; }
+        .fc-color-6 { --fc-bg: #F1F5F9; --fc-icon-bg: #E2E8F0; --fc-icon-color: #475569; --fc-hover-bg: #475569; }
+
+        .ui-card { background: var(--card-bg); border-radius: var(--border-radius-card); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .status-hadir { background-color: #D1FAE5; color: var(--success); }
+        .status-absen { background-color: #FEE2E2; color: var(--danger); }
+        .status-telat { background-color: #FEF3C7; color: var(--warning); }
+        .status-izin { background-color: #DBEAFE; color: var(--info); }
+        .status-sakit { background-color: #F3E8FF; color: #9333EA; }
+        .status-belum { background:#F1F5F9; color: var(--text-muted); }
+
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .cal-day-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+        .cal-date { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.9rem; border-radius: 50%; cursor: pointer; transition: var(--transition); position: relative; }
+        .cal-date:hover { background-color: var(--primary-light); }
+        .cal-date.active { background-color: var(--primary); color: white; font-weight: bold; }
+        .cal-date.empty { cursor: default; background: transparent; }
+        .cal-date.empty:hover { background: transparent; }
+        .cal-dots { display: flex; gap: 3px; position: absolute; bottom: 4px; }
+        .dot { width: 4px; height: 4px; border-radius: 50%; }
+        .dot-hadir { background-color: var(--success); }
+        .dot-izin { background-color: var(--info); }
+        .dot-absen { background-color: var(--danger); }
+        .cal-date.active .dot { border: 1px solid white; }
+
+        .filter-row { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        .filter-row::-webkit-scrollbar { display: none; }
+        .filter-chip { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; background: var(--card-bg); border: 1px solid #E2E8F0; color: var(--text-muted); white-space: nowrap; cursor: pointer; transition: var(--transition); }
+        .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .list-item { background: var(--card-bg); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .list-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
+        .list-info p { font-size: 0.75rem; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .empty-state i { font-size: 3rem; color: #E2E8F0; margin-bottom: 12px; }
+
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #CBD5E1; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .icon-btn-sm { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 6px 8px; font-size: 0.9rem; border-radius: 50%; transition: var(--transition); }
+        .icon-btn-sm:hover { color: var(--danger); background: #FEE2E2; }
+
+        .lecturer-header { background-color: var(--primary); color: white; padding: 24px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; text-align: center; position: relative; }
+        .btn-back { position: absolute; left: 20px; top: 24px; color: white; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+
+        .scanner-container { margin: 20px auto; width: 80%; max-width: 320px; aspect-ratio: 1; background-color: #000; border-radius: 24px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+        #qr-reader { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+        #qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+        #qr-reader__scan_region { width: 100% !important; height: 100% !important; background: transparent !important; }
+        #qr-reader__scan_region img { display: none !important; }
+        #qr-reader__dashboard_section, #qr-reader__dashboard_section_csr, #qr-reader__status_span, #qr-reader__header_message { display: none !important; }
+        #qr-reader { border: none !important; padding: 0 !important; }
+
+        .scanner-brackets { position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; border: 2px solid transparent; background: linear-gradient(to right, var(--primary) 4px, transparent 4px) 0 0, linear-gradient(to right, var(--primary) 4px, transparent 4px) 0 100%, linear-gradient(to left, var(--primary) 4px, transparent 4px) 100% 0, linear-gradient(to left, var(--primary) 4px, transparent 4px) 100% 100%, linear-gradient(to bottom, var(--primary) 4px, transparent 4px) 0 0, linear-gradient(to bottom, var(--primary) 4px, transparent 4px) 100% 0, linear-gradient(to top, var(--primary) 4px, transparent 4px) 0 100%, linear-gradient(to top, var(--primary) 4px, transparent 4px) 100% 100%; background-repeat: no-repeat; background-size: 30px 30px; z-index: 2; pointer-events: none; }
+        .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 3px; background-color: var(--primary); box-shadow: 0 0 15px var(--primary); animation: scan 2.5s infinite linear; z-index: 3; pointer-events: none; }
+        @keyframes scan { 0% { top: 5%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 95%; opacity: 0; } }
+
+        .progress-container { width: 100%; background-color: #E2E8F0; border-radius: 10px; height: 8px; margin: 12px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background-color: var(--success); border-radius: 10px; transition: width 0.5s ease; }
+
+        .table-container { padding: 0 20px; margin-bottom: 40px; width: 100%; max-width: 1000px; margin: 0 auto; }
+        .responsive-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: var(--border-radius-card); overflow: hidden; box-shadow: var(--shadow); }
+        .responsive-table th, .responsive-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #E2E8F0; font-size: 0.9rem; }
+        .responsive-table th { background-color: #F8FAFC; font-weight: 600; color: var(--text-muted); }
+
+        @media (max-width: 768px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .responsive-table thead { display: none; }
+            .responsive-table tbody tr { display: block; padding: 16px; border-bottom: 6px solid var(--bg); }
+            .responsive-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #E2E8F0; }
+            .responsive-table tbody td:last-child { border-bottom: none; }
+            .responsive-table tbody td::before { content: attr(data-label); font-weight: 500; color: var(--text-muted); font-size: 0.8rem; }
+            .responsive-table tbody td:first-child { display: none; }
+        }
+        @media (min-width: 769px) {
+            .bottom-nav { display: none; }
+            .app-container { padding-bottom: 40px; }
+            .feature-grid { grid-template-columns: repeat(3, 1fr); }
+            .app-header { border-radius: 20px; margin-top: 20px; box-shadow: var(--shadow); }
+        }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: var(--transition); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-card { background: var(--card-bg); width: 90%; max-width: 400px; border-radius: var(--border-radius-card); padding: 30px 24px; text-align: center; transform: translateY(20px); transition: var(--transition); box-shadow: 0 24px 48px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+        #qr-code-wrap { width: 220px; height: 220px; margin: 20px auto; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #qr-code-wrap img, #qr-code-wrap canvas { display: block; }
+
+        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; max-width: 90vw; }
+        .toast { background: white; padding: 12px 20px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; transform: translateY(-20px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success i { color: var(--success); }
+        .toast-error i { color: var(--danger); }
+        .toast-info i { color: var(--info); }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ============ LANDING ============ -->
+    <div id="landing-view" class="view-container">
+        <div class="landing-decorative"></div>
+        <div class="landing-decorative-2"></div>
+
+        <button class="btn btn-lecturer-top" onclick="openLecturerSetup()">
+            <i class="fas fa-qrcode"></i> Mulai Absensi
+        </button>
+
+        <div class="landing-card">
+            <i class="fas fa-user-check landing-icon"></i>
+            <h1 class="font-bold mb-1">Presensi Digital</h1>
+            <p class="text-muted mb-2" style="font-size: 0.9rem;">Catat kehadiranmu tanpa ribet.</p>
+
+            <form id="login-form" onsubmit="handleStudentLogin(event)">
+                <div class="input-group">
+                    <label>NPM</label>
+                    <input type="text" id="input-npm" class="input-control" placeholder="Masukkan NPM" required autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary mt-2" id="btn-login">Masuk ke Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============ STUDENT ============ -->
+    <div id="student-view" class="view-container hidden">
+        <div class="app-container">
+            <header class="app-header">
+                <div class="user-info">
+                    <div class="avatar" id="student-avatar">?</div>
+                    <div class="user-text">
+                        <h2 id="student-greeting">Halo!</h2>
+                        <p id="student-meta">- • -</p>
+                        <p id="student-course" style="color: var(--primary); font-weight: 500; font-size: 0.75rem; margin-top:2px;">-</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="openModal('profile-modal')"><i class="fas fa-user"></i></button>
+                </div>
+            </header>
+
+            <div id="tab-dashboard" class="content-section mt-2">
+                <h3 class="section-title">Ringkasan Kehadiran</h3>
+                <div class="summary-grid">
+                    <div class="summary-card sc-success"><h3 id="summary-hadir">0</h3><p>Hadir</p></div>
+                    <div class="summary-card sc-danger"><h3 id="summary-absen">0</h3><p>Alpha</p></div>
+                    <div class="summary-card sc-warning"><h3 id="summary-telat">0</h3><p>Telat</p></div>
+                    <div class="summary-card"><h3 id="summary-persen" class="text-primary">0%</h3><p>Persentase</p></div>
+                </div>
+
+                <div class="next-class-card">
+                    <p style="font-size: 0.8rem; font-weight: 600; opacity: 0.9; margin-bottom: 8px;"><i class="far fa-clock"></i> PERTEMUAN BERIKUTNYA</p>
+                    <h3 id="next-class-name" style="font-size: 1.2rem; margin-bottom: 4px;">-</h3>
+                    <p id="next-class-time" style="font-size: 0.9rem; opacity: 0.9;">-</p>
+                    <p id="next-class-reminder" style="font-size: 0.8rem; opacity: 0.9; margin-top: 8px; display:none;">
+                        <i class="far fa-bell"></i> <span id="next-class-reminder-text"></span>
+                    </p>
+                </div>
+
+                <h3 class="section-title">Fitur Presensi</h3>
+                <div class="feature-grid">
+                    <div class="feature-card fc-color-1" onclick="openModal('qr-modal')"><div class="feature-icon"><i class="fas fa-qrcode"></i></div><div><h4>QR Saya</h4><p>Tampilkan QR</p></div></div>
+                    <div class="feature-card fc-color-2" onclick="switchTab('tab-calendar')"><div class="feature-icon"><i class="far fa-calendar-alt"></i></div><div><h4>Kalender</h4><p>Riwayat Harian</p></div></div>
+                    <div class="feature-card fc-color-3" onclick="switchTab('tab-history')"><div class="feature-icon"><i class="fas fa-history"></i></div><div><h4>Riwayat</h4><p>Detail Kehadiran</p></div></div>
+                    <div class="feature-card fc-color-4" onclick="switchTab('tab-reminder')"><div class="feature-icon"><i class="far fa-bell"></i></div><div><h4>Pengingat</h4><p>Jadwal Kelas</p></div></div>
+                    <div class="feature-card fc-color-5" onclick="switchTab('tab-schedule')"><div class="feature-icon"><i class="far fa-list-alt"></i></div><div><h4>Jadwal</h4><p>Daftar Kuliah</p></div></div>
+                    <div class="feature-card fc-color-6" onclick="openModal('profile-modal')"><div class="feature-icon"><i class="far fa-user-circle"></i></div><div><h4>Akun</h4><p>Profil & Setting</p></div></div>
+                </div>
+            </div>
+
+            <div id="tab-calendar" class="content-section mt-2 hidden">
+                <h3 class="section-title">Kalender Presensi</h3>
+                <div class="ui-card">
+                    <div class="calendar-header">
+                        <button class="btn btn-outline" style="padding: 4px 12px;" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <h4 class="font-bold" id="calendar-title">-</h4>
+                        <button class="btn btn-outline" style="padding: 4px 12px;" onclick="changeCalendarMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="cal-day-name">Sen</div><div class="cal-day-name">Sel</div><div class="cal-day-name">Rab</div><div class="cal-day-name">Kam</div><div class="cal-day-name">Jum</div><div class="cal-day-name">Sab</div><div class="cal-day-name">Min</div>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid-body"></div>
+                </div>
+                <div class="ui-card" id="calendar-detail" style="border-left: 4px solid var(--primary);">
+                    <p class="text-muted" style="font-size: 0.85rem;">Pilih tanggal untuk melihat detail.</p>
+                </div>
+            </div>
+
+            <div id="tab-history" class="content-section mt-2 hidden">
+                <h3 class="section-title">Riwayat Presensi</h3>
+                <div class="filter-row">
+                    <div class="filter-chip active" data-filter="semua" onclick="setHistoryFilter('semua')">Semua</div>
+                    <div class="filter-chip" data-filter="hadir" onclick="setHistoryFilter('hadir')">Hadir</div>
+                    <div class="filter-chip" data-filter="terlambat" onclick="setHistoryFilter('terlambat')">Terlambat</div>
+                    <div class="filter-chip" data-filter="izin" onclick="setHistoryFilter('izin')">Izin</div>
+                    <div class="filter-chip" data-filter="sakit" onclick="setHistoryFilter('sakit')">Sakit</div>
+                    <div class="filter-chip" data-filter="alpha" onclick="setHistoryFilter('alpha')">Alpha</div>
+                </div>
+                <div id="history-list"><div class="empty-state"><i class="fas fa-inbox"></i><p>Memuat riwayat…</p></div></div>
+            </div>
+
+            <div id="tab-reminder" class="content-section mt-2 hidden">
+                <div class="flex justify-between align-center mb-2">
+                    <h3 class="section-title" style="margin:0;">Pengingat Kelas</h3>
+                    <button class="btn btn-sm btn-primary" onclick="openReminderModal()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="reminder-list"><div class="empty-state"><i class="far fa-bell"></i><p>Memuat pengingat…</p></div></div>
+            </div>
+
+            <div id="tab-schedule" class="content-section mt-2 hidden">
+                <h3 class="section-title">Jadwal Kuliah</h3>
+                <div id="schedule-list"><div class="empty-state"><i class="far fa-list-alt"></i><p>Memuat jadwal…</p></div></div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a class="nav-item active" onclick="switchTab('tab-dashboard')" id="nav-dashboard"><i class="fas fa-home"></i> <span>Home</span></a>
+            <a class="nav-item" onclick="switchTab('tab-calendar')" id="nav-calendar"><i class="far fa-calendar-alt"></i> <span>Kalender</span></a>
+            <a class="nav-item" onclick="openModal('qr-modal')">
+                <div style="background:var(--primary); color:white; width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; transform:translateY(-10px); box-shadow:var(--shadow-hover);">
+                    <i class="fas fa-qrcode" style="font-size:1.5rem; margin:0;"></i>
+                </div>
+            </a>
+            <a class="nav-item" onclick="switchTab('tab-history')" id="nav-history"><i class="fas fa-history"></i> <span>Riwayat</span></a>
+            <a class="nav-item" onclick="openModal('profile-modal')"><i class="far fa-user"></i> <span>Profil</span></a>
+        </nav>
+    </div>
+
+    <!-- ============ LECTURER SETUP ============ -->
+    <div id="lecturer-setup-view" class="view-container hidden">
+        <header class="lecturer-header">
+            <button class="btn-back" onclick="leaveLecturerSetup()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="font-bold">Pengaturan Sesi</h2>
+        </header>
+        <div class="app-container" style="padding: 20px;">
+            <div class="ui-card">
+                <form id="lecturer-setup-form" onsubmit="handleLecturerSetup(event)">
+                    <div class="input-group">
+                        <label>Mata Kuliah</label>
+                        <select id="lecturer-course" class="input-control" required onchange="onLecturerCourseChange()">
+                            <option value="">Memuat…</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="input-group" style="flex:1;">
+                            <label>Semester</label>
+                            <select id="lecturer-semester" class="input-control" required>
+                                <option value="4">4</option>
+                                <option value="5" selected>5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex:1;">
+                            <label>Kelas</label>
+                            <select id="lecturer-kelas" class="input-control" required>
+                                <option value="5.1" selected>5.1</option>
+                                <option value="5.2">5.2</option>
+                                <option value="5.3">5.3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pertemuan Ke-</label>
+                        <input type="number" id="lecturer-pertemuan" class="input-control" value="1" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Tanggal</label>
+                        <input type="date" id="lecturer-tanggal" class="input-control" required>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="input-group" style="flex:1;">
+                            <label>Jam Mulai</label>
+                            <input type="time" id="lecturer-jam-mulai" class="input-control" value="08:00" required>
+                        </div>
+                        <div class="input-group" style="flex:1;">
+                            <label>Jam Selesai</label>
+                            <input type="time" id="lecturer-jam-selesai" class="input-control" value="09:40" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-start-session" class="btn btn-primary mt-2" style="font-size: 1.1rem; padding: 16px;">
+                        <i class="fas fa-play"></i> Mulai Sesi Presensi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ LECTURER SCANNER ============ -->
+    <div id="lecturer-scanner-view" class="view-container hidden">
+        <header class="lecturer-header" style="padding-bottom: 16px;">
+            <button class="btn-back" onclick="handleLeaveScanner()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="font-bold">SCAN QR MAHASISWA</h2>
+            <p id="scanner-session-info" style="font-size: 0.85rem; margin-top: 4px; opacity: 0.9;">—</p>
+        </header>
+
+        <div style="background: white; text-align:center; padding: 12px; border-bottom: 1px solid #eee;">
+            <span class="status-badge status-hadir" style="font-size:0.8rem; padding: 6px 16px;">
+                <i class="fas fa-broadcast-tower"></i> SESI PRESENSI AKTIF
+            </span>
+            <p class="font-bold text-primary mt-1" id="scanner-clock" style="font-size: 1.2rem;">—</p>
+        </div>
+
+        <div class="scanner-container">
+            <div id="qr-reader"></div>
+            <div class="scanner-brackets"></div>
+            <div class="scanner-line"></div>
+        </div>
+
+        <div class="flex justify-between gap-1" style="padding: 0 20px; max-width:400px; margin: 0 auto;">
+            <button class="btn btn-danger" style="flex:1;" onclick="openModal('end-session-modal')"><i class="fas fa-stop"></i> Akhiri Sesi</button>
+        </div>
+
+        <div class="table-container mt-3">
+            <div class="ui-card">
+                <h3 class="section-title" style="margin-bottom: 8px;">
+                    Status Kehadiran <span class="text-primary font-bold" id="monitor-counter">0/0</span>
+                </h3>
+                <div class="progress-container"><div class="progress-bar" id="monitor-progress" style="width: 0%;"></div></div>
+                <div class="flex justify-between text-muted" style="font-size: 0.8rem; margin-bottom: 16px;">
+                    <span><i class="fas fa-circle text-success"></i> Hadir: <span id="monitor-hadir">0</span></span>
+                    <span><i class="fas fa-circle text-warning"></i> Telat: <span id="monitor-telat">0</span></span>
+                    <span><i class="fas fa-circle text-danger"></i> Belum: <span id="monitor-belum">0</span></span>
+                </div>
+                <div class="input-group mb-2">
+                    <input type="text" id="monitor-search" class="input-control" placeholder="Cari mahasiswa..." oninput="renderLectureMonitor()">
+                </div>
+                <table class="responsive-table">
+                    <thead><tr><th>NPM</th><th>Nama</th><th>Kelas</th><th>Waktu</th><th>Status</th></tr></thead>
+                    <tbody id="monitor-tbody">
+                        <tr><td colspan="5" class="text-center text-muted" style="padding: 20px;">Memuat…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ LECTURER RECAP ============ -->
+    <div id="lecturer-recap-view" class="view-container hidden">
+        <header class="lecturer-header">
+            <button class="btn-back" onclick="leaveRecap()"><i class="fas fa-home"></i></button>
+            <h2 class="font-bold">Rekap Sesi</h2>
+            <p id="recap-subtitle" style="font-size: 0.9rem; margin-top: 4px; opacity: 0.9;">—</p>
+        </header>
+        <div class="app-container" style="padding: 20px;">
+            <div class="ui-card text-center">
+                <i class="fas fa-check-circle text-success" style="font-size: 4rem; margin-bottom: 16px;"></i>
+                <h3 class="font-bold mb-1">Sesi Presensi Berakhir</h3>
+                <p class="text-muted mb-3" id="recap-date">—</p>
+                <div class="summary-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="summary-card"><h3 id="recap-total">0</h3><p>Total Mhs</p></div>
+                    <div class="summary-card sc-success"><h3 id="recap-hadir">0</h3><p>Hadir</p></div>
+                    <div class="summary-card sc-warning"><h3 id="recap-telat">0</h3><p>Terlambat</p></div>
+                    <div class="summary-card text-primary"><h3 id="recap-persen">0%</h3><p>Persentase</p></div>
+                </div>
+
+                <div class="ui-card" style="margin-top: 20px; text-align: left;">
+                    <h4 class="mb-2">Daftar Kehadiran</h4>
+                    <div id="recap-list"><p class="text-muted text-center" style="font-size: 0.85rem;">—</p></div>
+                </div>
+
+                <div style="margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="openModal('export-modal')">
+                        <i class="fas fa-download"></i> Export Rekap
+                    </button>
+                    <button class="btn btn-outline" style="width: 100%;" onclick="leaveRecap()">
+                        <i class="fas fa-home"></i> Kembali ke Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <div class="modal-overlay" id="qr-modal">
+        <div class="modal-card">
+            <h3 class="font-bold mb-1">QR Presensi Saya</h3>
+            <p class="text-muted" style="font-size: 0.85rem;">Tunjukkan QR ini ke dosen untuk absensi.</p>
+            <div id="qr-code-wrap"></div>
+            <div class="mb-3">
+                <h4 class="font-bold text-primary" id="qr-name">-</h4>
+                <p class="font-semibold" id="qr-npm">-</p>
+                <p class="text-muted text-sm mt-1" id="qr-meta">-</p>
+                <span class="status-badge status-hadir mt-1" style="display:inline-block">QR Aktif</span>
+            </div>
+            <div class="flex gap-1">
+                <button class="btn btn-outline-muted" onclick="closeModal('qr-modal')" style="flex:1;">Tutup</button>
+                <button class="btn btn-primary" onclick="downloadQrImage()" style="flex:1;"><i class="fas fa-download"></i> Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="add-reminder-modal">
+        <div class="modal-card">
+            <h3 class="font-bold mb-3">Tambah Pengingat</h3>
+            <form id="reminder-form" onsubmit="handleSaveReminder(event)">
+                <div class="input-group">
+                    <label>Mata Kuliah</label>
+                    <select id="reminder-course" class="input-control" required onchange="onReminderCourseChange()">
+                        <option value="">Pilih mata kuliah</option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <div class="input-group" style="flex:1;">
+                        <label>Hari</label>
+                        <select id="reminder-hari" class="input-control" required>
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                            <option value="Sabtu">Sabtu</option>
+                            <option value="Minggu">Minggu</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>Jam</label>
+                        <input type="time" id="reminder-jam" class="input-control" value="08:00" required>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <label>Ingatkan Saya</label>
+                    <select id="reminder-menit" class="input-control">
+                        <option value="5">5 menit sebelum</option>
+                        <option value="10">10 menit sebelum</option>
+                        <option value="15">15 menit sebelum</option>
+                        <option value="30" selected>30 menit sebelum</option>
+                        <option value="60">60 menit sebelum</option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <button type="button" class="btn btn-outline-muted" onclick="closeModal('add-reminder-modal')" style="flex:1;">Batal</button>
+                    <button type="submit" id="btn-save-reminder" class="btn btn-primary" style="flex:1;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="delete-reminder-modal">
+        <div class="modal-card">
+            <i class="fas fa-trash text-danger" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">Hapus pengingat?</h3>
+            <p class="text-muted mb-3" id="delete-reminder-info">—</p>
+            <div class="flex gap-1">
+                <button class="btn btn-outline-muted" onclick="closeModal('delete-reminder-modal')" style="flex:1;">Batal</button>
+                <button class="btn btn-danger" onclick="confirmDeleteReminder()" style="flex:1;">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal-card">
+            <div class="avatar" id="profile-avatar" style="width:80px; height:80px; font-size:2rem; margin: 0 auto 16px;">?</div>
+            <h3 class="font-bold" id="profile-name">-</h3>
+            <p class="text-muted mb-3" id="profile-npm">-</p>
+            <div style="text-align: left; background: var(--bg); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                <p class="font-semibold text-sm mb-1">Status Akademik:</p>
+                <p class="text-primary font-bold" id="profile-course">-</p>
+                <p class="text-muted text-sm" id="profile-meta">-</p>
+            </div>
+            <button class="btn btn-outline-danger" style="width: 100%;" onclick="closeModal('profile-modal'); openModal('logout-modal');">
+                <i class="fas fa-sign-out-alt"></i> Keluar Akun
+            </button>
+        </div>
+        <button class="btn-back" style="position:absolute; top:20px; left:20px; background:white; color:var(--text-main); border-radius:50%; width:40px; height:40px; box-shadow:var(--shadow)" onclick="closeModal('profile-modal')"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-overlay" id="logout-modal">
+        <div class="modal-card">
+            <i class="fas fa-sign-out-alt text-danger" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">Keluar dari akun?</h3>
+            <p class="text-muted mb-3">Data presensi tetap aman di server.</p>
+            <div class="flex gap-1">
+                <button class="btn btn-outline-muted" onclick="closeModal('logout-modal')" style="flex:1;">Batal</button>
+                <button class="btn btn-danger" onclick="handleLogout()" style="flex:1;">Keluar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="end-session-modal">
+        <div class="modal-card">
+            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">Akhiri Sesi Presensi?</h3>
+            <p class="text-muted mb-3">Mahasiswa yang belum melakukan scan tidak dapat lagi melakukan absensi setelah sesi diakhiri.</p>
+            <div class="flex gap-1">
+                <button class="btn btn-outline-muted" onclick="closeModal('end-session-modal')" style="flex:1;">Batal</button>
+                <button class="btn btn-primary" onclick="handleEndSession()" style="flex:1;">Akhiri Sesi</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="recover-session-modal">
+        <div class="modal-card">
+            <i class="fas fa-redo text-primary" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">Lanjutkan Sesi?</h3>
+            <p class="text-muted mb-3" id="recover-session-info">—</p>
+            <div class="flex gap-1">
+                <button class="btn btn-outline-muted" onclick="discardRecoveredSession()" style="flex:1;">Buang</button>
+                <button class="btn btn-primary" onclick="resumeRecoveredSession()" style="flex:1;">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="export-modal">
+        <div class="modal-card">
+            <i class="fas fa-file-export text-primary" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">Export Rekap</h3>
+            <p class="text-muted mb-3" style="font-size: 0.85rem;">Pilih format file untuk mengunduh rekap kehadiran.</p>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 16px;">
+                <button class="btn btn-primary" style="width:100%; justify-content:flex-start; padding: 14px 20px;" onclick="exportAttendanceXlsx()">
+                    <i class="fas fa-file-excel" style="font-size: 1.2rem; margin-right: 8px;"></i> Excel (.xlsx)
+                </button>
+                <button class="btn btn-outline" style="width:100%; justify-content:flex-start; padding: 14px 20px;" onclick="exportAttendanceCsv()">
+                    <i class="fas fa-file-csv" style="font-size: 1.2rem; margin-right: 8px;"></i> CSV (.csv)
+                </button>
+            </div>
+            <button class="btn btn-outline-muted" style="width:100%;" onclick="closeModal('export-modal')">Batal</button>
+        </div>
+    </div>
+
+    <!-- CDN Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+    /* ============================================================
+     * CONFIG
+     * ============================================================
+     * PENTING: Isi API_URL dengan URL Web App Google Apps Script.
+     * Lihat README.md untuk cara mendapatkan URL tersebut.
+     * ============================================================ */
+    const CONFIG = {
+        API_URL: 'https://script.google.com/macros/s/AKfycbwjBmMVuxa5dFErGSo_nlqGmFfQ8GzWAXCVhJUcjKqzKo0Okusf7_MFnClO_KouKhSk/exec', // ← GANTI dengan URL Web App Apps Script Anda
+        STORAGE_KEY: 'digital_attendance_state',
+        STUDENT_KEY: 'digital_attendance_student',
+        SESSION_KEY: 'digital_attendance_session',
+        NOTIF_KEY: 'digital_attendance_notif_opt_in',
+        DEBUG: false
+    };
+    const SCAN_COOLDOWN_MS = 3000;
+    const POLL_INTERVAL_MS = 3000;
+    const REMINDER_CHECK_INTERVAL_MS = 60000;
+
+    function isApiConfigured() {
+        return typeof CONFIG.API_URL === 'string' && CONFIG.API_URL.trim() !== '';
+    }
+
+    /* ============================================================
+     * STATE
+     * ============================================================ */
+    function createInitialState() {
+        const now = new Date();
+        return {
+            currentUser: null, userRole: null, student: null,
+            lecturer: { session: null, students: [], attendance: [], recap: null },
+            attendance: {
+                history: [], summary: null,
+                calendarMonth: now.getMonth(),
+                calendarYear: now.getFullYear(),
+                selectedDate: null,
+                historyFilter: 'semua'
+            },
+            schedule: [], reminders: [], nextClass: null,
+            ui: { currentView: 'landing-view', currentTab: 'tab-dashboard', loading: false }
+        };
+    }
+    const appState = createInitialState();
+
+    let _html5QrCode = null;
+    let _scannerRunning = false;
+    let _attendancePollingId = null;
+    let _scannerClockId = null;
+    let _reminderCheckId = null;
+    let _lastScannedNpm = null;
+    let _lastScanTime = 0;
+    let _sessionExpiryHandled = false;
+    let _pendingDeleteReminderIndex = -1;
+
+    /* ============================================================
+     * UTIL
+     * ============================================================ */
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function formatDateId(iso) {
+        if (!iso) return '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return String(iso);
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        const p = iso.split('-');
+        return parseInt(p[2],10) + ' ' + months[parseInt(p[1],10)-1] + ' ' + p[0];
+    }
+    function formatDateLongId(iso) {
+        if (!iso) return '';
+        const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const p = iso.split('-');
+        return parseInt(p[2],10) + ' ' + months[parseInt(p[1],10)-1] + ' ' + p[0];
+    }
+    function parseTimeMinutes(t) {
+        if (!t) return null;
+        const p = String(t).split(':');
+        if (p.length < 2) return null;
+        const h = parseInt(p[0],10), m = parseInt(p[1],10);
+        if (isNaN(h) || isNaN(m)) return null;
+        return h * 60 + m;
+    }
+
+    /* ============================================================
+     * STORAGE
+     * ============================================================ */
+    function saveAppState() {
+        try {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
+                currentUser: appState.currentUser, userRole: appState.userRole,
+                student: appState.student, lecturer: appState.lecturer,
+                attendance: appState.attendance, schedule: appState.schedule,
+                reminders: appState.reminders, nextClass: appState.nextClass
+            }));
+            return true;
+        } catch (e) { console.error('[saveAppState]', e); return false; }
+    }
+    function loadAppState() {
+        try {
+            const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object') ? parsed : null;
+        } catch (e) { console.error('[loadAppState]', e); return null; }
+    }
+    function clearAppState() {
+        try { localStorage.removeItem(CONFIG.STORAGE_KEY); return true; } catch (e) { return false; }
+    }
+    function saveStudent(student) {
+        if (!student || !student.npm) return false;
+        appState.student = student; appState.currentUser = student; appState.userRole = 'student';
+        try { localStorage.setItem(CONFIG.STUDENT_KEY, JSON.stringify(student)); } catch (e) {}
+        saveAppState();
+        return true;
+    }
+    function getCurrentStudent() {
+        if (appState.student && appState.student.npm) return appState.student;
+        try {
+            const raw = localStorage.getItem(CONFIG.STUDENT_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return (parsed && parsed.npm) ? parsed : null;
+        } catch (e) { return null; }
+    }
+    function clearStudent() {
+        appState.student = null; appState.currentUser = null; appState.userRole = null;
+        try { localStorage.removeItem(CONFIG.STUDENT_KEY); } catch (e) {}
+        saveAppState();
+    }
+    function saveLecturerSession() {
+        try {
+            if (appState.lecturer.session) localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(appState.lecturer.session));
+            else localStorage.removeItem(CONFIG.SESSION_KEY);
+        } catch (e) {}
+    }
+    function loadLecturerSession() {
+        try {
+            const raw = localStorage.getItem(CONFIG.SESSION_KEY);
+            if (!raw) return null;
+            const s = JSON.parse(raw);
+            return (s && s.sessionId) ? s : null;
+        } catch (e) { return null; }
+    }
+    function clearLecturerSession() {
+        try { localStorage.removeItem(CONFIG.SESSION_KEY); } catch (e) {}
+    }
+    function isNotifOptedIn() {
+        try { return localStorage.getItem(CONFIG.NOTIF_KEY) === '1'; } catch (e) { return false; }
+    }
+    function setNotifOptedIn(v) {
+        try {
+            if (v) localStorage.setItem(CONFIG.NOTIF_KEY, '1');
+            else localStorage.removeItem(CONFIG.NOTIF_KEY);
+        } catch (e) {}
+    }
+
+    /* ============================================================
+     * API
+     * ============================================================ */
+    async function apiRequest(action, data) {
+        data = data || {};
+        if (!isApiConfigured()) {
+            if (CONFIG.DEBUG) console.warn('[apiRequest] API_URL kosong. action=' + action);
+            return { success: false, message: 'API belum dikonfigurasi', data: null };
+        }
+        try {
+            const res = await fetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: action, data: data }),
+                redirect: 'follow'
+            });
+            if (!res.ok) return { success: false, message: 'Server tidak merespon dengan benar (HTTP ' + res.status + ')', data: null };
+            let json;
+            try { json = await res.json(); }
+            catch (e) { return { success: false, message: 'Format respons tidak valid', data: null }; }
+            if (!json || typeof json !== 'object') return { success: false, message: 'Format respons tidak sesuai', data: null };
+            return json;
+        } catch (err) {
+            console.error('[apiRequest]', err);
+            return { success: false, message: 'Gagal terhubung ke server. Periksa koneksi internet Anda.', data: null };
+        }
+    }
+
+    /* ============================================================
+     * LOADING & ERROR
+     * ============================================================ */
+    function setLoading(isLoading) {
+        appState.ui.loading = !!isLoading;
+        document.body.style.cursor = isLoading ? 'wait' : '';
+        const btn = document.getElementById('btn-login');
+        if (btn) { btn.disabled = !!isLoading; btn.style.opacity = isLoading ? '0.7' : ''; }
+    }
+    function setButtonLoading(btn, isLoading) {
+        if (!btn) return;
+        btn.disabled = !!isLoading;
+        btn.style.opacity = isLoading ? '0.7' : '';
+    }
+    function handleApiError(error, fallback) {
+        const msg = (error && error.message) ? error.message : (fallback || 'Terjadi kesalahan');
+        showToast('error', msg);
+    }
+
+    /* ============================================================
+     * TOAST
+     * ============================================================ */
+    function showToast(type, message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-' + type;
+        let icon = 'info-circle';
+        if (type === 'success') icon = 'check-circle';
+        if (type === 'error') icon = 'exclamation-circle';
+        toast.innerHTML = '<i class="fas fa-' + icon + '"></i> <span>' + escapeHtml(message) + '</span>';
+        container.appendChild(toast);
+        setTimeout(function () { toast.classList.add('show'); }, 10);
+        setTimeout(function () {
+            toast.classList.remove('show');
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 3200);
+    }
+
+    /* ============================================================
+     * NOTIFICATION
+     * ============================================================ */
+    async function ensureNotificationPermission() {
+        if (typeof Notification === 'undefined') return false;
+        if (Notification.permission === 'granted') return true;
+        if (Notification.permission === 'denied') return false;
+        try {
+            const p = await Notification.requestPermission();
+            return p === 'granted';
+        } catch (e) { return false; }
+    }
+    function sendBrowserNotification(title, body) {
+        if (typeof Notification === 'undefined') return;
+        if (Notification.permission !== 'granted') return;
+        try { new Notification(title, { body: body }); }
+        catch (e) { console.warn('[notification]', e); }
+    }
+    function startReminderChecker() {
+        stopReminderChecker();
+        if (!isNotifOptedIn()) return;
+        _reminderCheckId = setInterval(checkReminders, REMINDER_CHECK_INTERVAL_MS);
+        checkReminders();
+    }
+    function stopReminderChecker() {
+        if (_reminderCheckId) { clearInterval(_reminderCheckId); _reminderCheckId = null; }
+    }
+    function checkReminders() {
+        if (!isNotifOptedIn()) return;
+        if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+        if (!appState.reminders || !appState.reminders.length) return;
+        const now = new Date();
+        const dayMap = { 'Senin': 1, 'Selasa': 2, 'Rabu': 3, 'Kamis': 4, 'Jumat': 5, 'Sabtu': 6, 'Minggu': 0 };
+        const curDay = now.getDay();
+        const curMin = now.getHours() * 60 + now.getMinutes();
+        const dayKey = now.toISOString().slice(0, 10);
+        appState.reminders.forEach(function (r, i) {
+            if (!r.active) return;
+            if (!r.hari || !r.jam) return;
+            const d = dayMap[r.hari];
+            if (d === undefined || d !== curDay) return;
+            const hm = String(r.jam).split(':').map(Number);
+            if (hm.length < 2) return;
+            const startMin = hm[0] * 60 + hm[1];
+            const triggerMin = startMin - (r.menitSebelum || 30);
+            if (curMin >= triggerMin && curMin < triggerMin + 1) {
+                const key = 'notified_' + dayKey + '_' + (r.reminderId || i);
+                try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
+                sendBrowserNotification('Pengingat Kelas', r.course + ' • ' + r.hari + ', ' + r.jam);
+            }
+        });
+    }
+
+    /* ============================================================
+     * VIEW / TAB / MODAL
+     * ============================================================ */
+    function switchView(viewId) {
+        if (appState.ui.currentView === 'lecturer-scanner-view' && viewId !== 'lecturer-scanner-view') {
+            stopScanner(); stopAttendancePolling(); stopScannerClock();
+        }
+        document.querySelectorAll('.view-container').forEach(function (v) { v.classList.add('hidden'); });
+        const target = document.getElementById(viewId);
+        if (target) { target.classList.remove('hidden'); appState.ui.currentView = viewId; window.scrollTo(0, 0); }
+    }
+    function switchTab(tabId) {
+        ['tab-dashboard','tab-calendar','tab-history','tab-reminder','tab-schedule'].forEach(function (t) {
+            const el = document.getElementById(t);
+            if (el) el.classList.add('hidden');
+        });
+        document.querySelectorAll('.nav-item').forEach(function (n) { n.classList.remove('active'); });
+        const target = document.getElementById(tabId);
+        if (target) target.classList.remove('hidden');
+        const navMap = { 'tab-dashboard': 'nav-dashboard', 'tab-calendar': 'nav-calendar', 'tab-history': 'nav-history' };
+        if (navMap[tabId]) { const el = document.getElementById(navMap[tabId]); if (el) el.classList.add('active'); }
+        appState.ui.currentTab = tabId;
+        window.scrollTo(0, 0);
+    }
+    function openModal(modalId) {
+        if (modalId === 'profile-modal') renderProfileModal();
+        if (modalId === 'qr-modal') renderQrModal();
+        const el = document.getElementById(modalId);
+        if (el) el.classList.add('active');
+    }
+    function closeModal(modalId) {
+        const el = document.getElementById(modalId);
+        if (el) el.classList.remove('active');
+    }
+    document.querySelectorAll('.modal-overlay').forEach(function (o) {
+        o.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('active'); });
+    });
+
+    /* ============================================================
+     * RENDER: STUDENT
+     * ============================================================ */
+    function renderApp() {
+        if (appState.student && appState.student.npm) {
+            renderStudentHeader();
+            renderStudentDashboard();
+            renderAttendanceHistory();
+            renderCalendar();
+            renderReminders();
+            renderSchedule();
+            renderProfileModal();
+            switchView('student-view');
+        } else {
+            switchView('landing-view');
+        }
+    }
+    function renderStudentHeader() {
+        const s = appState.student; if (!s) return;
+        const initial = (s.nama || '?').trim().charAt(0).toUpperCase() || '?';
+        const firstName = (s.nama || 'Mahasiswa').trim().split(' ')[0];
+        const el = function (id) { return document.getElementById(id); };
+        if (el('student-avatar')) el('student-avatar').textContent = initial;
+        if (el('student-greeting')) el('student-greeting').textContent = 'Halo, ' + firstName + '!';
+        if (el('student-meta')) el('student-meta').textContent = (s.npm || '-') + ' • Kelas ' + (s.kelas || '-');
+        if (el('student-course')) el('student-course').textContent = 'Semester ' + (s.semester || '-') + ' • ' + (s.status || 'Aktif');
+    }
+    function renderStudentDashboard() {
+        const sm = appState.attendance.summary || { hadir: 0, absen: 0, telat: 0, persen: 0 };
+        const el = function (id) { return document.getElementById(id); };
+        if (el('summary-hadir')) el('summary-hadir').textContent = sm.hadir || 0;
+        if (el('summary-absen')) el('summary-absen').textContent = sm.absen || 0;
+        if (el('summary-telat')) el('summary-telat').textContent = sm.telat || 0;
+        if (el('summary-persen')) el('summary-persen').textContent = (sm.persen || 0) + '%';
+
+        const nc = appState.nextClass;
+        const nameEl = document.getElementById('next-class-name');
+        const timeEl = document.getElementById('next-class-time');
+        const remEl = document.getElementById('next-class-reminder');
+        const remTextEl = document.getElementById('next-class-reminder-text');
+
+        if (nc) {
+            if (nameEl) nameEl.textContent = nc.course || '-';
+            if (timeEl) timeEl.textContent = (nc.time || '-') + (nc.kelas ? ' • ' + nc.kelas : '');
+            const matchingRem = (appState.reminders || []).find(function (r) {
+                return r.active && r.course && nc.course && r.course.toLowerCase() === nc.course.toLowerCase();
+            });
+            if (matchingRem && remEl && remTextEl) {
+                remTextEl.textContent = 'Pengingat aktif ' + matchingRem.menitSebelum + ' menit sebelum kelas';
+                remEl.style.display = 'block';
+            } else if (remEl) {
+                remEl.style.display = 'none';
+            }
+        } else {
+            if (nameEl) nameEl.textContent = 'Belum ada jadwal';
+            if (timeEl) timeEl.textContent = '—';
+            if (remEl) remEl.style.display = 'none';
+        }
+    }
+    function renderAttendanceHistory() {
+        const container = document.getElementById('history-list');
+        if (!container) return;
+        const all = appState.attendance.history || [];
+        const filter = appState.attendance.historyFilter || 'semua';
+        document.querySelectorAll('#tab-history .filter-chip').forEach(function (chip) {
+            chip.classList.toggle('active', chip.dataset.filter === filter);
+        });
+        const filtered = filter === 'semua' ? all : all.filter(function (it) { return String(it.status || '').toLowerCase() === filter; });
+        if (!filtered.length) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>' +
+                (all.length === 0 ? 'Belum ada riwayat presensi' : 'Tidak ada data untuk filter ini') + '</p></div>';
+            return;
+        }
+        const sm = {
+            hadir: { cls: 'status-hadir', label: 'Hadir' },
+            terlambat: { cls: 'status-telat', label: 'Terlambat' },
+            alpha: { cls: 'status-absen', label: 'Alpha' },
+            izin: { cls: 'status-izin', label: 'Izin' },
+            sakit: { cls: 'status-sakit', label: 'Sakit' }
+        };
+        container.innerHTML = filtered.map(function (it) {
+            const st = sm[String(it.status || '').toLowerCase()] || sm.hadir;
+            return '<div class="list-item">' +
+                '<div class="list-info">' +
+                    '<h4>' + escapeHtml(it.mataKuliah || it.course || '') + '</h4>' +
+                    '<p>' + escapeHtml(it.date || '') + '</p>' +
+                '</div>' +
+                '<span class="status-badge ' + st.cls + '">' + st.label + '</span>' +
+            '</div>';
+        }).join('');
+    }
+    function renderCalendar() {
+        const body = document.getElementById('calendar-grid-body');
+        const titleEl = document.getElementById('calendar-title');
+        if (!body) return;
+        const y = appState.attendance.calendarYear;
+        const m = appState.attendance.calendarMonth;
+        const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        if (titleEl) titleEl.textContent = monthNames[m] + ' ' + y;
+        const byDate = {};
+        (appState.attendance.history || []).forEach(function (h) {
+            if (!h.tanggal) return;
+            if (!byDate[h.tanggal]) byDate[h.tanggal] = [];
+            byDate[h.tanggal].push(h);
+        });
+        const firstDayJs = new Date(y, m, 1).getDay();
+        const offset = (firstDayJs + 6) % 7;
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === y && today.getMonth() === m;
+        const selected = appState.attendance.selectedDate;
+        let html = '';
+        for (let i = 0; i < offset; i++) html += '<div class="cal-date empty"></div>';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = y + '-' + String(m + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+            const items = byDate[dateStr] || [];
+            let dots = '';
+            if (items.length > 0) {
+                dots = '<div class="cal-dots">' + items.slice(0,4).map(function (it) {
+                    const st = String(it.status || '').toLowerCase();
+                    let cls = 'dot-hadir';
+                    if (st === 'izin' || st === 'sakit') cls = 'dot-izin';
+                    else if (st === 'alpha' || st === 'absen') cls = 'dot-absen';
+                    return '<div class="dot ' + cls + '"></div>';
+                }).join('') + '</div>';
+            }
+            const isActive = selected === dateStr || (!selected && isCurrentMonth && d === today.getDate());
+            html += '<div class="cal-date' + (isActive ? ' active' : '') + '" onclick="selectCalendarDate(\'' + dateStr + '\')">' + d + dots + '</div>';
+        }
+        body.innerHTML = html;
+        renderCalendarDetail();
+    }
+    function renderCalendarDetail() {
+        const detail = document.getElementById('calendar-detail');
+        if (!detail) return;
+        const selected = appState.attendance.selectedDate;
+        if (!selected) {
+            detail.innerHTML = '<p class="text-muted" style="font-size:0.85rem;">Pilih tanggal untuk melihat detail.</p>';
+            return;
+        }
+        const items = (appState.attendance.history || []).filter(function (h) { return h.tanggal === selected; });
+        const header = '<h4 class="mb-2">' + escapeHtml(formatDateId(selected)) + '</h4>';
+        if (!items.length) {
+            detail.innerHTML = header + '<p class="text-muted" style="font-size:0.85rem;">Tidak ada presensi pada tanggal ini.</p>';
+            return;
+        }
+        const sm = {
+            hadir: { cls: 'text-primary', label: 'Hadir' },
+            terlambat: { cls: 'text-warning', label: 'Terlambat' },
+            alpha: { cls: 'text-danger', label: 'Alpha' },
+            izin: { cls: 'text-primary', label: 'Izin' },
+            sakit: { cls: 'text-primary', label: 'Sakit' }
+        };
+        const rows = items.map(function (it, idx) {
+            const st = sm[String(it.status || '').toLowerCase()] || sm.hadir;
+            const border = idx < items.length - 1 ? 'border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;' : '';
+            const pert = it.pertemuan ? ' • Pertemuan ' + it.pertemuan : '';
+            return '<div class="flex justify-between" style="' + border + '">' +
+                '<span>' + escapeHtml(it.mataKuliah || '') + pert + '</span>' +
+                '<span class="' + st.cls + ' font-semibold">' + st.label + '</span>' +
+            '</div>';
+        }).join('');
+        detail.innerHTML = header + rows;
+    }
+    function renderReminders() {
+        const container = document.getElementById('reminder-list');
+        if (!container) return;
+        const items = appState.reminders || [];
+        if (!items.length) {
+            container.innerHTML = '<div class="empty-state"><i class="far fa-bell"></i><p>Belum ada pengingat. Tekan + untuk menambahkan.</p></div>';
+            return;
+        }
+        container.innerHTML = items.map(function (r, i) {
+            return '<div class="list-item">' +
+                '<div class="list-info">' +
+                    '<h4>' + escapeHtml(r.course || r.mataKuliah || '') + '</h4>' +
+                    '<p><i class="far fa-clock"></i> ' + escapeHtml(r.time || '') + '</p>' +
+                '</div>' +
+                '<div style="display:flex; align-items:center; gap:4px;">' +
+                    '<button class="icon-btn-sm" onclick="handleDeleteReminder(' + i + ')" title="Hapus"><i class="fas fa-trash"></i></button>' +
+                    '<label class="toggle-switch">' +
+                        '<input type="checkbox" ' + (r.active ? 'checked' : '') + ' onchange="toggleReminder(' + i + ', this.checked)">' +
+                        '<span class="slider"></span>' +
+                    '</label>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+    function renderSchedule() {
+        const container = document.getElementById('schedule-list');
+        if (!container) return;
+        const days = appState.schedule || [];
+        if (!days.length) {
+            container.innerHTML = '<div class="empty-state"><i class="far fa-list-alt"></i><p>Belum ada jadwal</p></div>';
+            return;
+        }
+        container.innerHTML = days.map(function (d) {
+            const items = (d.items || []).map(function (it) {
+                return '<div class="mb-2"><p class="font-semibold">' + escapeHtml(it.time) + '</p><p>' + escapeHtml(it.name) + '</p></div>';
+            }).join('');
+            return '<div class="ui-card" style="padding: 16px;"><h4 class="text-primary mb-2">' + escapeHtml(d.day) + '</h4>' + items + '</div>';
+        }).join('');
+    }
+    function renderProfileModal() {
+        const s = appState.student; if (!s) return;
+        const initial = (s.nama || '?').trim().charAt(0).toUpperCase() || '?';
+        const el = function (id) { return document.getElementById(id); };
+        if (el('profile-avatar')) el('profile-avatar').textContent = initial;
+        if (el('profile-name')) el('profile-name').textContent = s.nama || '-';
+        if (el('profile-npm')) el('profile-npm').textContent = (s.npm || '-') + ' • Mahasiswa';
+        if (el('profile-course')) el('profile-course').textContent = 'Semester ' + (s.semester || '-') + ' • Kelas ' + (s.kelas || '-');
+        if (el('profile-meta')) el('profile-meta').textContent = 'Status: ' + (s.status || 'Aktif');
+    }
+    function renderQrModal() {
+        const s = appState.student; if (!s) return;
+        const el = function (id) { return document.getElementById(id); };
+        if (el('qr-name')) el('qr-name').textContent = s.nama || '-';
+        if (el('qr-npm')) el('qr-npm').textContent = s.npm || '-';
+        if (el('qr-meta')) el('qr-meta').textContent = 'Kelas ' + (s.kelas || '-');
+        setTimeout(generateStudentQR, 20);
+    }
+
+    /* ============================================================
+     * QR GENERATION
+     * ============================================================ */
+    function generateStudentQR() {
+        const s = appState.student;
+        const container = document.getElementById('qr-code-wrap');
+        if (!container || !s || !s.npm) return;
+        container.innerHTML = '';
+        if (typeof QRCode === 'undefined') {
+            container.innerHTML = '<p class="text-muted" style="padding:20px;font-size:0.8rem;">Generator QR tidak dapat dimuat.</p>';
+            return;
+        }
+        try {
+            new QRCode(container, {
+                text: 'ATTENDANCE|' + s.npm,
+                width: 200, height: 200,
+                colorDark: '#1E293B', colorLight: '#FFFFFF',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        } catch (e) {
+            console.error('[generateStudentQR]', e);
+            container.innerHTML = '<p class="text-muted" style="padding:20px;font-size:0.8rem;">Gagal membuat QR.</p>';
+        }
+    }
+    function downloadQrImage() {
+        const container = document.getElementById('qr-code-wrap');
+        const s = appState.student;
+        if (!container || !s) return;
+        let url = null;
+        const canvas = container.querySelector('canvas');
+        if (canvas && canvas.toDataURL) { try { url = canvas.toDataURL('image/png'); } catch (e) {} }
+        if (!url) { const img = container.querySelector('img'); if (img && img.src) url = img.src; }
+        if (!url) { showToast('error', 'QR belum siap'); return; }
+        const a = document.createElement('a');
+        a.href = url; a.download = 'QR-' + s.npm + '.png';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        showToast('success', 'QR berhasil diunduh');
+    }
+
+    /* ============================================================
+     * STUDENT: LOGIN / LOGOUT
+     * ============================================================ */
+    async function handleStudentLogin(event) {
+        event.preventDefault();
+        const npmInput = document.getElementById('input-npm');
+        const npm = (npmInput && npmInput.value ? npmInput.value : '').trim();
+        if (!npm) { showToast('error', 'NPM wajib diisi'); return; }
+        setLoading(true);
+        try {
+            if (isApiConfigured()) {
+                const res = await apiRequest('getStudent', { npm: npm });
+                if (!res.success) { showToast('error', res.message || 'Mahasiswa tidak ditemukan'); return; }
+                saveStudent({
+                    npm: String(res.data.npm), nama: String(res.data.nama || ''),
+                    semester: res.data.semester, kelas: String(res.data.kelas || ''),
+                    status: String(res.data.status || 'Aktif')
+                });
+            } else {
+                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: '5.1', status: 'Aktif' });
+            }
+            await refreshStudentData();
+            renderApp();
+            if (isNotifOptedIn()) startReminderChecker();
+            showToast('success', 'Berhasil masuk');
+        } catch (e) {
+            handleApiError(e, 'Gagal masuk');
+        } finally { setLoading(false); }
+    }
+
+    function handleLogout() {
+        closeModal('logout-modal');
+        clearStudent();
+        clearAppState();
+        const now = new Date();
+        appState.attendance = {
+            history: [], summary: null,
+            calendarMonth: now.getMonth(), calendarYear: now.getFullYear(),
+            selectedDate: null, historyFilter: 'semua'
+        };
+        appState.schedule = []; appState.reminders = []; appState.nextClass = null;
+        stopReminderChecker();
+        renderApp();
+        showToast('info', 'Anda telah keluar');
+    }
+
+    /* ============================================================
+     * STUDENT: REMINDER
+     * ============================================================ */
+    async function openReminderModal() {
+        if (!appState.schedule || !appState.schedule.length) {
+            if (appState.student && isApiConfigured()) {
+                await refreshStudentData();
+            }
+        }
+        populateReminderCourses();
+        const sel = document.getElementById('reminder-course');
+        if (sel) sel.value = '';
+        const jam = document.getElementById('reminder-jam');
+        if (jam) jam.value = '08:00';
+        const menit = document.getElementById('reminder-menit');
+        if (menit) menit.value = '30';
+        openModal('add-reminder-modal');
+    }
+    function populateReminderCourses() {
+        const sel = document.getElementById('reminder-course');
+        if (!sel) return;
+        const seen = {};
+        const options = [];
+        (appState.schedule || []).forEach(function (day) {
+            (day.items || []).forEach(function (it) {
+                if (it.courseId && !seen[it.courseId]) {
+                    seen[it.courseId] = true;
+                    options.push({ id: it.courseId, name: it.courseName || it.courseId });
+                }
+            });
+        });
+        if (!options.length) {
+            sel.innerHTML = '<option value="">Belum ada mata kuliah</option>';
+            return;
+        }
+        sel.innerHTML = '<option value="">Pilih mata kuliah</option>' + options.map(function (o) {
+            return '<option value="' + escapeHtml(o.id) + '">' + escapeHtml(o.name) + '</option>';
+        }).join('');
+    }
+    function onReminderCourseChange() {
+        const sel = document.getElementById('reminder-course');
+        const hari = document.getElementById('reminder-hari');
+        const jam = document.getElementById('reminder-jam');
+        if (!sel || !hari || !jam) return;
+        const courseId = sel.value;
+        if (!courseId) return;
+        for (let i = 0; i < (appState.schedule || []).length; i++) {
+            const day = appState.schedule[i];
+            for (let j = 0; j < (day.items || []).length; j++) {
+                const it = day.items[j];
+                if (it.courseId === courseId) {
+                    if (it.hari) hari.value = it.hari;
+                    if (it.jamMulai) jam.value = it.jamMulai;
+                    return;
+                }
+            }
+        }
+    }
+    async function handleSaveReminder(event) {
+        event.preventDefault();
+        const sel = document.getElementById('reminder-course');
+        const hari = document.getElementById('reminder-hari').value;
+        const jam = document.getElementById('reminder-jam').value;
+        const menit = parseInt(document.getElementById('reminder-menit').value, 10);
+        const courseId = sel ? sel.value : '';
+        if (!courseId) { showToast('error', 'Pilih mata kuliah'); return; }
+        if (!hari || !jam) { showToast('error', 'Hari dan jam wajib diisi'); return; }
+        if (!appState.student || !appState.student.npm) { showToast('error', 'Anda belum masuk'); return; }
+        if (!isApiConfigured()) { showToast('error', 'API belum dikonfigurasi'); return; }
+
+        const btn = document.getElementById('btn-save-reminder');
+        setButtonLoading(btn, true);
+        try {
+            const res = await apiRequest('createReminder', {
+                npm: appState.student.npm, courseId: courseId,
+                hari: hari, jam: jam, menitSebelum: menit, aktif: true
+            });
+            if (!res.success) { showToast('error', res.message || 'Gagal menyimpan pengingat'); return; }
+            closeModal('add-reminder-modal');
+            showToast('success', 'Pengingat ditambahkan');
+            const remRes = await apiRequest('getReminders', { npm: appState.student.npm });
+            if (remRes.success && Array.isArray(remRes.data)) {
+                appState.reminders = remRes.data.map(normalizeReminder);
+                saveAppState();
+                renderReminders();
+                renderStudentDashboard();
+            }
+        } catch (e) {
+            handleApiError(e, 'Gagal menyimpan pengingat');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    }
+    function handleDeleteReminder(index) {
+        const r = appState.reminders[index];
+        if (!r) return;
+        _pendingDeleteReminderIndex = index;
+        const info = document.getElementById('delete-reminder-info');
+        if (info) info.textContent = 'Hapus pengingat untuk ' + (r.course || '') + '?';
+        openModal('delete-reminder-modal');
+    }
+    async function confirmDeleteReminder() {
+        const idx = _pendingDeleteReminderIndex;
+        _pendingDeleteReminderIndex = -1;
+        closeModal('delete-reminder-modal');
+        const r = appState.reminders[idx];
+        if (!r) return;
+        if (!r.reminderId) { showToast('error', 'Pengingat tidak valid'); return; }
+        try {
+            const res = await apiRequest('deleteReminder', { reminderId: r.reminderId });
+            if (!res.success) { showToast('error', res.message || 'Gagal menghapus pengingat'); return; }
+            appState.reminders.splice(idx, 1);
+            saveAppState();
+            renderReminders();
+            renderStudentDashboard();
+            showToast('success', 'Pengingat dihapus');
+        } catch (e) {
+            handleApiError(e, 'Gagal menghapus pengingat');
+        }
+    }
+    async function toggleReminder(index, active) {
+        const r = appState.reminders[index];
+        if (!r) return;
+        const prev = r.active;
+        r.active = !!active;
+        renderReminders();
+        if (active && !isNotifOptedIn() && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            const granted = await ensureNotificationPermission();
+            if (granted) {
+                setNotifOptedIn(true);
+                startReminderChecker();
+                showToast('success', 'Notifikasi browser diaktifkan');
+            }
+        }
+        if (!isApiConfigured() || !r.reminderId || !appState.student) {
+            saveAppState();
+            showToast('info', active ? 'Pengingat diaktifkan' : 'Pengingat dimatikan');
+            return;
+        }
+        try {
+            const res = await apiRequest('updateReminder', { reminderId: r.reminderId, npm: appState.student.npm, aktif: !!active });
+            if (!res.success) {
+                r.active = prev; renderReminders();
+                showToast('error', res.message || 'Gagal memperbarui pengingat');
+                return;
+            }
+            saveAppState();
+            showToast('info', active ? 'Pengingat diaktifkan' : 'Pengingat dimatikan');
+        } catch (e) {
+            r.active = prev; renderReminders();
+            handleApiError(e, 'Gagal memperbarui pengingat');
+        }
+    }
+
+    /* ============================================================
+     * STUDENT: DATA
+     * ============================================================ */
+    function setHistoryFilter(filter) {
+        appState.attendance.historyFilter = filter;
+        saveAppState(); renderAttendanceHistory();
+    }
+    function changeCalendarMonth(delta) {
+        let m = appState.attendance.calendarMonth + delta;
+        let y = appState.attendance.calendarYear;
+        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+        appState.attendance.calendarMonth = m;
+        appState.attendance.calendarYear = y;
+        appState.attendance.selectedDate = null;
+        saveAppState(); renderCalendar();
+    }
+    function selectCalendarDate(dateStr) { appState.attendance.selectedDate = dateStr; renderCalendar(); }
+
+    function normalizeHistoryItem(item) {
+        const parts = [];
+        if (item.tanggal) parts.push(formatDateId(item.tanggal));
+        if (item.pertemuan) parts.push('Pertemuan ' + item.pertemuan);
+        if (item.waktuScan) {
+            const sp = String(item.waktuScan).split(' ');
+            if (sp.length >= 2) parts.push(sp[1].substring(0,5));
+        }
+        return {
+            attendanceId: item.attendanceId, sessionId: item.sessionId, courseId: item.courseId,
+            mataKuliah: item.mataKuliah || '', course: item.mataKuliah || '',
+            pertemuan: item.pertemuan || '', tanggal: item.tanggal || '',
+            waktuScan: item.waktuScan || '',
+            status: String(item.status || '').toLowerCase(),
+            date: parts.join(' • ')
+        };
+    }
+    function normalizeReminder(r) {
+        return {
+            reminderId: r.reminderId, courseId: r.courseId,
+            course: r.mataKuliah || r.courseId || '',
+            hari: r.hari || '', jam: r.jam || '',
+            menitSebelum: r.menitSebelum != null ? r.menitSebelum : 30,
+            time: (r.hari || '') + (r.jam ? ', ' + r.jam : '') + (r.menitSebelum != null ? ' • ' + r.menitSebelum + ' mnt sebelum' : ''),
+            active: !!r.aktif
+        };
+    }
+    function groupSchedulesByDay(schedules) {
+        const order = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+        const map = {};
+        (schedules || []).forEach(function (s) {
+            const day = String(s.hari || 'Lain-lain');
+            const key = day.toUpperCase();
+            if (!map[key]) map[key] = { day: key, items: [], _order: order.indexOf(day) };
+            map[key].items.push({
+                time: s.jamMulai + ' - ' + s.jamSelesai + ' WIB',
+                name: (s.mataKuliah || s.courseId || '') + (s.kelas ? ' (Kelas ' + s.kelas + ')' : ''),
+                _start: parseTimeMinutes(s.jamMulai) || 0,
+                courseId: s.courseId,
+                courseName: s.mataKuliah || s.courseId,
+                hari: s.hari,
+                jamMulai: s.jamMulai
+            });
+        });
+        Object.keys(map).forEach(function (k) { map[k].items.sort(function (a,b) { return a._start - b._start; }); });
+        return Object.keys(map).map(function (k) { return map[k]; })
+            .sort(function (a, b) {
+                if (a._order === -1 && b._order !== -1) return 1;
+                if (b._order === -1 && a._order !== -1) return -1;
+                return a._order - b._order;
+            });
+    }
+    function pickNextClass(schedules) {
+        if (!schedules || !schedules.length) return null;
+        const dayOrder = { Senin:1, Selasa:2, Rabu:3, Kamis:4, Jumat:5, Sabtu:6, Minggu:7 };
+        const now = new Date();
+        const jsDay = now.getDay();
+        const curDayOrder = jsDay === 0 ? 7 : jsDay;
+        const curMin = now.getHours() * 60 + now.getMinutes();
+        const sorted = schedules.slice().sort(function (a, b) {
+            const da = dayOrder[a.hari] || 99, db = dayOrder[b.hari] || 99;
+            if (da !== db) return da - db;
+            return (parseTimeMinutes(a.jamMulai) || 0) - (parseTimeMinutes(b.jamMulai) || 0);
+        });
+        function build(s) { return { course: s.mataKuliah || s.courseId || '', time: s.hari + ', ' + s.jamMulai + ' - ' + s.jamSelesai + ' WIB', kelas: 'Kelas ' + (s.kelas || '') }; }
+        for (let i = 0; i < sorted.length; i++) {
+            const s = sorted[i];
+            const d = dayOrder[s.hari] || 99;
+            const t = parseTimeMinutes(s.jamMulai);
+            if (d === curDayOrder && t !== null && t >= curMin) return build(s);
+            if (d > curDayOrder) return build(s);
+        }
+        return build(sorted[0]);
+    }
+    async function refreshStudentData() {
+        if (!appState.student) return;
+        if (!isApiConfigured()) {
+            appState.attendance.summary = { hadir: 0, absen: 0, telat: 0, persen: 0 };
+            appState.attendance.history = []; appState.schedule = [];
+            appState.reminders = []; appState.nextClass = null;
+            return;
+        }
+        const npm = appState.student.npm;
+        const semester = appState.student.semester;
+        const kelas = appState.student.kelas;
+        const results = await Promise.allSettled([
+            apiRequest('getAttendanceSummary', { npm: npm }),
+            apiRequest('getAttendanceHistory', { npm: npm }),
+            apiRequest('getSchedules', { semester: semester, kelas: kelas }),
+            apiRequest('getReminders', { npm: npm })
+        ]);
+        const summaryRes  = results[0].status === 'fulfilled' ? results[0].value : { success: false };
+        const historyRes  = results[1].status === 'fulfilled' ? results[1].value : { success: false };
+        const scheduleRes = results[2].status === 'fulfilled' ? results[2].value : { success: false };
+        const reminderRes = results[3].status === 'fulfilled' ? results[3].value : { success: false };
+
+        if (summaryRes.success && summaryRes.data) {
+            appState.attendance.summary = {
+                hadir: summaryRes.data.hadir || 0,
+                absen: summaryRes.data.alpha || 0,
+                telat: summaryRes.data.terlambat || 0,
+                persen: summaryRes.data.persentase || 0,
+                total: summaryRes.data.total || 0,
+                izin: summaryRes.data.izin || 0,
+                sakit: summaryRes.data.sakit || 0
+            };
+        } else {
+            appState.attendance.summary = { hadir: 0, absen: 0, telat: 0, persen: 0 };
+        }
+        appState.attendance.history = (historyRes.success && Array.isArray(historyRes.data))
+            ? historyRes.data.map(normalizeHistoryItem) : [];
+        if (scheduleRes.success && Array.isArray(scheduleRes.data)) {
+            appState.schedule = groupSchedulesByDay(scheduleRes.data);
+            appState.nextClass = pickNextClass(scheduleRes.data);
+        } else {
+            appState.schedule = []; appState.nextClass = null;
+        }
+        appState.reminders = (reminderRes.success && Array.isArray(reminderRes.data))
+            ? reminderRes.data.map(normalizeReminder) : [];
+        saveAppState();
+    }
+
+    /* ============================================================
+     * LECTURER: SETUP
+     * ============================================================ */
+    function openLecturerSetup() {
+        const saved = loadLecturerSession();
+        if (saved && saved.sessionId) { tryRecoverSession(saved); return; }
+        const tglEl = document.getElementById('lecturer-tanggal');
+        if (tglEl && !tglEl.value) tglEl.value = new Date().toISOString().slice(0, 10);
+        switchView('lecturer-setup-view');
+        loadCoursesIntoSetup();
+    }
+    function leaveLecturerSetup() { switchView('landing-view'); }
+    async function loadCoursesIntoSetup() {
+        const sel = document.getElementById('lecturer-course');
+        if (!sel) return;
+        if (!isApiConfigured()) { sel.innerHTML = '<option value="">API belum dikonfigurasi</option>'; return; }
+        sel.innerHTML = '<option value="">Memuat…</option>';
+        try {
+            const res = await apiRequest('getCourses', {});
+            if (res.success && Array.isArray(res.data)) {
+                if (!res.data.length) { sel.innerHTML = '<option value="">Belum ada mata kuliah</option>'; return; }
+                sel.innerHTML = '<option value="">Pilih mata kuliah</option>' + res.data.map(function (c) {
+                    return '<option value="' + escapeHtml(c.courseId) + '" data-semester="' + escapeHtml(c.semester) + '">' + escapeHtml(c.mataKuliah) + '</option>';
+                }).join('');
+            } else { sel.innerHTML = '<option value="">Gagal memuat</option>'; }
+        } catch (e) { sel.innerHTML = '<option value="">Error</option>'; }
+    }
+    function onLecturerCourseChange() {
+        const sel = document.getElementById('lecturer-course');
+        const sem = document.getElementById('lecturer-semester');
+        if (!sel || !sem) return;
+        const opt = sel.options[sel.selectedIndex];
+        if (opt && opt.dataset && opt.dataset.semester) sem.value = opt.dataset.semester;
+    }
+    async function handleLecturerSetup(event) {
+        event.preventDefault();
+        const courseId = document.getElementById('lecturer-course').value;
+        const semester = document.getElementById('lecturer-semester').value;
+        const kelas = document.getElementById('lecturer-kelas').value;
+        const pertemuan = parseInt(document.getElementById('lecturer-pertemuan').value, 10);
+        const tanggal = document.getElementById('lecturer-tanggal').value;
+        const jamMulai = document.getElementById('lecturer-jam-mulai').value;
+        const jamSelesai = document.getElementById('lecturer-jam-selesai').value;
+        if (!courseId) { showToast('error', 'Pilih mata kuliah'); return; }
+        if (!pertemuan || pertemuan < 1) { showToast('error', 'Pertemuan tidak valid'); return; }
+        if (!tanggal) { showToast('error', 'Tanggal wajib diisi'); return; }
+        if (!jamMulai || !jamSelesai) { showToast('error', 'Jam wajib diisi'); return; }
+        if (jamSelesai <= jamMulai) { showToast('error', 'Jam selesai harus setelah jam mulai'); return; }
+        if (!isApiConfigured()) { showToast('error', 'API belum dikonfigurasi'); return; }
+        const btn = document.getElementById('btn-start-session');
+        setButtonLoading(btn, true);
+        try {
+            const res = await apiRequest('createSession', {
+                courseId: courseId, semester: semester, kelas: kelas,
+                pertemuan: pertemuan, tanggal: tanggal, jamMulai: jamMulai, jamSelesai: jamSelesai
+            });
+            if (!res.success) { showToast('error', res.message || 'Gagal membuat sesi'); return; }
+            const sel = document.getElementById('lecturer-course');
+            const opt = sel ? sel.options[sel.selectedIndex] : null;
+            const courseName = opt ? opt.textContent : courseId;
+            appState.lecturer.session = Object.assign({}, res.data, { courseName: courseName });
+            saveLecturerSession();
+            if (!isNotifOptedIn() && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                ensureNotificationPermission().then(function (granted) {
+                    if (granted) { setNotifOptedIn(true); startReminderChecker(); }
+                });
+            }
+            showToast('success', 'Sesi presensi dimulai');
+            await enterScannerView();
+        } catch (e) {
+            handleApiError(e, 'Gagal membuat sesi');
+        } finally { setButtonLoading(btn, false); }
+    }
+
+    /* ============================================================
+     * LECTURER: SCANNER
+     * ============================================================ */
+    async function enterScannerView() {
+        const s = appState.lecturer.session;
+        if (!s) return;
+        _sessionExpiryHandled = false;
+        renderScannerHeader();
+        switchView('lecturer-scanner-view');
+        updateScannerClock();
+        await Promise.allSettled([loadClassStudents(), refreshSessionAttendance()]);
+        renderLectureMonitor();
+        await startScanner();
+        startAttendancePolling();
+        startScannerClock();
+    }
+    function renderScannerHeader() {
+        const s = appState.lecturer.session;
+        if (!s) return;
+        const infoEl = document.getElementById('scanner-session-info');
+        if (infoEl) {
+            const parts = [];
+            if (s.courseName) parts.push(s.courseName);
+            if (s.kelas) parts.push('Kelas ' + s.kelas);
+            if (s.pertemuan) parts.push('Pertemuan ' + s.pertemuan);
+            infoEl.textContent = parts.join(' • ');
+        }
+    }
+    async function loadClassStudents() {
+        const s = appState.lecturer.session;
+        if (!s) return;
+        const res = await apiRequest('getClassStudents', { semester: s.semester, kelas: s.kelas });
+        if (res.success && Array.isArray(res.data)) appState.lecturer.students = res.data;
+        else appState.lecturer.students = [];
+    }
+    async function refreshSessionAttendance() {
+        const s = appState.lecturer.session;
+        if (!s) return;
+        const res = await apiRequest('getSessionAttendance', { sessionId: s.sessionId });
+        if (res.success && Array.isArray(res.data)) {
+            appState.lecturer.attendance = res.data;
+            renderLectureMonitor();
+        }
+    }
+    function startAttendancePolling() {
+        stopAttendancePolling();
+        _attendancePollingId = setInterval(refreshSessionAttendance, POLL_INTERVAL_MS);
+    }
+    function stopAttendancePolling() {
+        if (_attendancePollingId) { clearInterval(_attendancePollingId); _attendancePollingId = null; }
+    }
+    function startScannerClock() {
+        stopScannerClock();
+        _scannerClockId = setInterval(updateScannerClock, 1000);
+    }
+    function stopScannerClock() {
+        if (_scannerClockId) { clearInterval(_scannerClockId); _scannerClockId = null; }
+    }
+    function updateScannerClock() {
+        const s = appState.lecturer.session;
+        const el = document.getElementById('scanner-clock');
+        if (!s || !el) return;
+        if (!s.tanggal || !s.jamSelesai) { el.textContent = 'AKTIF'; return; }
+        const dp = s.tanggal.split('-').map(Number);
+        const hm = s.jamSelesai.split(':').map(Number);
+        if (dp.length < 3 || hm.length < 2) { el.textContent = 'AKTIF'; return; }
+        const endDate = new Date(dp[0], dp[1]-1, dp[2], hm[0], hm[1], 0);
+        const diff = endDate.getTime() - Date.now();
+        if (diff <= 0) {
+            el.innerHTML = 'Waktu habis';
+            if (!_sessionExpiryHandled) {
+                _sessionExpiryHandled = true;
+                showToast('info', 'Waktu sesi telah berakhir. Akhiri sesi untuk melihat rekap.');
+                stopScanner();
+                stopAttendancePolling();
+            }
+            return;
+        }
+        const totalMin = Math.floor(diff / 60000);
+        const hours = Math.floor(totalMin / 60);
+        const mins = totalMin % 60;
+        const label = hours > 0 ? (hours + ' jam ' + mins + ' mnt') : (mins + ' mnt');
+        el.innerHTML = label + ' <span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted)">tersisa</span>';
+    }
+    async function startScanner() {
+        if (_scannerRunning) return;
+        const target = document.getElementById('qr-reader');
+        if (!target) { showToast('error', 'Elemen scanner tidak ditemukan'); return; }
+        if (typeof Html5Qrcode === 'undefined') { showToast('error', 'Library scanner tidak dapat dimuat'); return; }
+        try {
+            _html5QrCode = new Html5Qrcode('qr-reader', { verbose: false });
+            await _html5QrCode.start(
+                { facingMode: 'environment' },
+                {
+                    fps: 10,
+                    qrbox: function (vw, vh) {
+                        const minEdge = Math.min(vw, vh);
+                        const size = Math.floor(minEdge * 0.7);
+                        return { width: size, height: size };
+                    },
+                    aspectRatio: 1.0
+                },
+                onScanSuccess,
+                function () { /* ignore */ }
+            );
+            _scannerRunning = true;
+        } catch (err) {
+            console.error('[startScanner]', err);
+            const msg = String((err && err.message) || err).toLowerCase();
+            if (msg.indexOf('permission') !== -1 || msg.indexOf('denied') !== -1 || msg.indexOf('notallowederror') !== -1) {
+                showToast('error', 'Kamera tidak dapat diakses. Silakan izinkan akses kamera pada browser.');
+            } else if (msg.indexOf('notfound') !== -1 || msg.indexOf('no camera') !== -1 || msg.indexOf('device not found') !== -1) {
+                showToast('error', 'Kamera tidak tersedia pada perangkat ini.');
+            } else {
+                showToast('error', 'Gagal membuka kamera: ' + msg);
+            }
+            _scannerRunning = false;
+        }
+    }
+    async function stopScanner() {
+        if (!_html5QrCode) { _scannerRunning = false; return; }
+        try { if (_scannerRunning) await _html5QrCode.stop(); } catch (e) { console.warn('[stopScanner]', e); }
+        try { _html5QrCode.clear(); } catch (e) {}
+        _html5QrCode = null;
+        _scannerRunning = false;
+    }
+    async function onScanSuccess(decodedText) {
+        if (!decodedText) return;
+        const prefix = 'ATTENDANCE|';
+        if (decodedText.indexOf(prefix) !== 0) return;
+        const npm = decodedText.substring(prefix.length).trim();
+        if (!npm) return;
+        const now = Date.now();
+        if (npm === _lastScannedNpm && (now - _lastScanTime) < SCAN_COOLDOWN_MS) return;
+        _lastScannedNpm = npm;
+        _lastScanTime = now;
+        await submitAttendance(npm);
+    }
+    async function submitAttendance(npm) {
+        const s = appState.lecturer.session;
+        if (!s) return;
+        try {
+            const res = await apiRequest('recordAttendance', { sessionId: s.sessionId, npm: npm });
+            if (res.success && res.data) {
+                const statusLabel = res.data.status === 'HADIR' ? 'HADIR' : (res.data.status === 'TERLAMBAT' ? 'TERLAMBAT' : res.data.status);
+                showToast('success', res.data.nama + ' — ' + statusLabel);
+                if (isNotifOptedIn() && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    sendBrowserNotification('Absensi Tercatat', res.data.nama + ' (' + npm + ') — ' + statusLabel);
+                }
+            } else {
+                const msg = (res && res.message) || 'Absensi gagal';
+                showToast('error', msg);
+                const lower = String(msg).toLowerCase();
+                if (lower.indexOf('sudah berakhir') !== -1 || lower.indexOf('tidak aktif') !== -1 || lower.indexOf('expired') !== -1) {
+                    if (!_sessionExpiryHandled) {
+                        _sessionExpiryHandled = true;
+                        stopScanner();
+                        stopAttendancePolling();
+                        showToast('info', 'Sesi telah berakhir. Akhiri sesi untuk melihat rekap.');
+                    }
+                }
+            }
+            await refreshSessionAttendance();
+        } catch (e) {
+            handleApiError(e, 'Absensi gagal');
+        }
+    }
+    function renderLectureMonitor() {
+        const s = appState.lecturer.session;
+        const tbody = document.getElementById('monitor-tbody');
+        if (!tbody || !s) return;
+        const students = appState.lecturer.students || [];
+        const att = appState.lecturer.attendance || [];
+        const search = (document.getElementById('monitor-search') || {}).value || '';
+        const searchLower = search.toLowerCase().trim();
+        const attMap = {};
+        att.forEach(function (a) { attMap[String(a.npm)] = a; });
+        let hadir = 0, telat = 0;
+        att.forEach(function (a) {
+            const st = String(a.status || '').toUpperCase();
+            if (st === 'HADIR') hadir++;
+            else if (st === 'TERLAMBAT') telat++;
+        });
+        const total = students.length;
+        const notAttended = Math.max(0, total - (hadir + telat));
+        const persen = total > 0 ? Math.round(((hadir + telat) / total) * 100) : 0;
+        const el = function (id) { return document.getElementById(id); };
+        if (el('monitor-counter')) el('monitor-counter').textContent = (hadir + telat) + '/' + total;
+        if (el('monitor-progress')) el('monitor-progress').style.width = persen + '%';
+        if (el('monitor-hadir')) el('monitor-hadir').textContent = hadir;
+        if (el('monitor-telat')) el('monitor-telat').textContent = telat;
+        if (el('monitor-belum')) el('monitor-belum').textContent = notAttended;
+        let rows = students.map(function (st) {
+            const a = attMap[String(st.npm)];
+            let statusLabel, statusCls, waktu = '—';
+            if (a) {
+                const up = String(a.status || '').toUpperCase();
+                waktu = a.waktuScan ? String(a.waktuScan).split(' ')[1] : '—';
+                if (waktu && waktu.length > 5) waktu = waktu.substring(0, 5);
+                if (up === 'HADIR') { statusLabel = 'Hadir'; statusCls = 'status-hadir'; }
+                else if (up === 'TERLAMBAT') { statusLabel = 'Terlambat'; statusCls = 'status-telat'; }
+                else if (up === 'IZIN') { statusLabel = 'Izin'; statusCls = 'status-izin'; }
+                else if (up === 'SAKIT') { statusLabel = 'Sakit'; statusCls = 'status-sakit'; }
+                else { statusLabel = up; statusCls = 'status-belum'; }
+            } else { statusLabel = 'Belum'; statusCls = 'status-belum'; }
+            return {
+                npm: String(st.npm), nama: st.nama || '', kelas: st.kelas || s.kelas,
+                waktu: waktu, statusLabel: statusLabel, statusCls: statusCls, hasAttendance: !!a
+            };
+        });
+        rows.sort(function (a, b) {
+            if (a.hasAttendance && !b.hasAttendance) return -1;
+            if (!a.hasAttendance && b.hasAttendance) return 1;
+            return a.npm.localeCompare(b.npm);
+        });
+        if (searchLower) {
+            rows = rows.filter(function (r) {
+                return r.npm.toLowerCase().indexOf(searchLower) !== -1 || r.nama.toLowerCase().indexOf(searchLower) !== -1;
+            });
+        }
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">' +
+                (total === 0 ? 'Tidak ada mahasiswa di kelas ini' : 'Tidak ada hasil') + '</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map(function (r) {
+            return '<tr>' +
+                '<td data-label="NPM">' + escapeHtml(r.npm) + '</td>' +
+                '<td data-label="Nama" class="font-semibold">' + escapeHtml(r.nama) + '</td>' +
+                '<td data-label="Kelas">' + escapeHtml(r.kelas) + '</td>' +
+                '<td data-label="Waktu">' + escapeHtml(r.waktu) + '</td>' +
+                '<td data-label="Status"><span class="status-badge ' + r.statusCls + '">' + escapeHtml(r.statusLabel) + '</span></td>' +
+            '</tr>';
+        }).join('');
+    }
+    async function handleLeaveScanner() {
+        await stopScanner();
+        stopAttendancePolling();
+        stopScannerClock();
+        switchView('landing-view');
+        showToast('info', 'Sesi masih aktif. Tekan "Mulai Absensi" untuk melanjutkan.');
+    }
+
+    /* ============================================================
+     * LECTURER: END SESSION & RECAP
+     * ============================================================ */
+    async function handleEndSession() {
+        closeModal('end-session-modal');
+        const s = appState.lecturer.session;
+        if (!s) return;
+        try {
+            const res = await apiRequest('endSession', { sessionId: s.sessionId });
+            if (!res.success) { showToast('error', res.message || 'Gagal mengakhiri sesi'); return; }
+            await stopScanner();
+            stopAttendancePolling();
+            stopScannerClock();
+            await refreshSessionAttendance();
+            const students = appState.lecturer.students || [];
+            const att = appState.lecturer.attendance || [];
+            const hadir = att.filter(function (a) { return String(a.status).toUpperCase() === 'HADIR'; }).length;
+            const telat = att.filter(function (a) { return String(a.status).toUpperCase() === 'TERLAMBAT'; }).length;
+            const total = students.length;
+            const persen = total > 0 ? Math.round(((hadir + telat) / total) * 100) : 0;
+            appState.lecturer.recap = {
+                total: total, hadir: hadir, telat: telat,
+                alpha: Math.max(0, total - (hadir + telat)),
+                persen: persen,
+                session: Object.assign({}, s),
+                students: students.slice(),
+                attendance: att.slice(),
+                endedAt: new Date().toISOString()
+            };
+            appState.lecturer.session = null;
+            clearLecturerSession();
+            saveAppState();
+            renderRecap();
+            switchView('lecturer-recap-view');
+            showToast('success', 'Sesi berhasil diakhiri');
+        } catch (e) {
+            handleApiError(e, 'Gagal mengakhiri sesi');
+        }
+    }
+    function renderRecap() {
+        const r = appState.lecturer.recap;
+        if (!r) return;
+        const el = function (id) { return document.getElementById(id); };
+        if (el('recap-total')) el('recap-total').textContent = r.total || 0;
+        if (el('recap-hadir')) el('recap-hadir').textContent = r.hadir || 0;
+        if (el('recap-telat')) el('recap-telat').textContent = r.telat || 0;
+        if (el('recap-persen')) el('recap-persen').textContent = (r.persen || 0) + '%';
+        if (el('recap-subtitle')) {
+            const s = r.session || {};
+            const parts = [];
+            if (s.courseName) parts.push(s.courseName);
+            if (s.kelas) parts.push('Kelas ' + s.kelas);
+            if (s.pertemuan) parts.push('Pertemuan ' + s.pertemuan);
+            el('recap-subtitle').textContent = parts.join(' • ') || '—';
+        }
+        if (el('recap-date')) {
+            const s = r.session || {};
+            el('recap-date').textContent = (s.tanggal ? formatDateLongId(s.tanggal) + ' • ' : '') +
+                (s.jamMulai || '') + ' - ' + (s.jamSelesai || '');
+        }
+        if (el('recap-list')) {
+            const attMap = {};
+            (r.attendance || []).forEach(function (a) { attMap[String(a.npm)] = a; });
+            const rows = (r.students || []).map(function (st) {
+                const a = attMap[String(st.npm)];
+                let label, cls;
+                if (a) {
+                    const up = String(a.status).toUpperCase();
+                    if (up === 'HADIR') { label = 'Hadir'; cls = 'status-hadir'; }
+                    else if (up === 'TERLAMBAT') { label = 'Terlambat'; cls = 'status-telat'; }
+                    else if (up === 'IZIN') { label = 'Izin'; cls = 'status-izin'; }
+                    else if (up === 'SAKIT') { label = 'Sakit'; cls = 'status-sakit'; }
+                    else { label = up; cls = 'status-belum'; }
+                } else { label = 'Belum'; cls = 'status-belum'; }
+                return '<div class="flex justify-between" style="border-bottom:1px solid #eee; padding: 8px 0;">' +
+                    '<div><span class="font-semibold">' + escapeHtml(st.npm) + '</span> — ' + escapeHtml(st.nama) + '</div>' +
+                    '<span class="status-badge ' + cls + '">' + label + '</span>' +
+                '</div>';
+            }).join('');
+            el('recap-list').innerHTML = rows || '<p class="text-muted text-center" style="font-size:0.85rem;">Tidak ada data mahasiswa</p>';
+        }
+    }
+    function leaveRecap() {
+        appState.lecturer.recap = null;
+        saveAppState();
+        switchView('landing-view');
+    }
+
+    /* ============================================================
+     * EXPORT
+     * ============================================================ */
+    function buildExportRows() {
+        const r = appState.lecturer.recap;
+        if (!r) return null;
+        const s = r.session || {};
+        const attMap = {};
+        (r.attendance || []).forEach(function (a) { attMap[String(a.npm)] = a; });
+        const rows = (r.students || []).map(function (st) {
+            const a = attMap[String(st.npm)];
+            return {
+                NPM: String(st.npm || ''),
+                Nama: String(st.nama || ''),
+                Kelas: String(st.kelas || s.kelas || ''),
+                MataKuliah: String(s.courseName || s.courseId || ''),
+                Pertemuan: String(s.pertemuan || ''),
+                Tanggal: String(s.tanggal || ''),
+                WaktuScan: a ? String(a.waktuScan || '') : '',
+                Status: a ? String(a.status || '').toUpperCase() : 'BELUM HADIR'
+            };
+        });
+        return { rows: rows, session: s };
+    }
+    function buildExportFilename(ext) {
+        const s = (appState.lecturer.recap && appState.lecturer.recap.session) || {};
+        const clean = function (v) { return String(v || '').replace(/[^A-Za-z0-9\-_.]+/g, '_'); };
+        const parts = ['Rekap'];
+        if (s.courseName) parts.push(clean(s.courseName));
+        if (s.kelas) parts.push(clean(s.kelas));
+        if (s.pertemuan) parts.push('Pertemuan_' + s.pertemuan);
+        if (s.tanggal) parts.push(s.tanggal);
+        return parts.join('_') + '.' + ext;
+    }
+    function escapeCsv(v) {
+        if (v === null || v === undefined) return '';
+        const s = String(v);
+        if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf('\r') !== -1) {
+            return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+    }
+    function exportAttendanceCsv() {
+        const data = buildExportRows();
+        if (!data || !data.rows.length) { showToast('error', 'Belum ada data absensi untuk diekspor.'); return; }
+        const headers = ['NPM','Nama','Kelas','Mata Kuliah','Pertemuan','Tanggal','Waktu Scan','Status'];
+        const lines = [headers.join(',')];
+        data.rows.forEach(function (r) {
+            lines.push([
+                escapeCsv(r.NPM), escapeCsv(r.Nama), escapeCsv(r.Kelas), escapeCsv(r.MataKuliah),
+                escapeCsv(r.Pertemuan), escapeCsv(r.Tanggal), escapeCsv(r.WaktuScan), escapeCsv(r.Status)
+            ].join(','));
+        });
+        const csv = '\uFEFF' + lines.join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = buildExportFilename('csv');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        closeModal('export-modal');
+        showToast('success', 'CSV berhasil diunduh');
+    }
+    function exportAttendanceXlsx() {
+        if (typeof XLSX === 'undefined') {
+            showToast('error', 'Library Excel tidak dapat dimuat. Gunakan CSV sebagai alternatif.');
+            return;
+        }
+        const data = buildExportRows();
+        if (!data || !data.rows.length) { showToast('error', 'Belum ada data absensi untuk diekspor.'); return; }
+        try {
+            const ws = XLSX.utils.json_to_sheet(data.rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Rekap');
+            XLSX.writeFile(wb, buildExportFilename('xlsx'));
+            closeModal('export-modal');
+            showToast('success', 'Excel berhasil diunduh');
+        } catch (e) {
+            console.error('[exportAttendanceXlsx]', e);
+            showToast('error', 'Gagal membuat file Excel. Gunakan CSV sebagai alternatif.');
+        }
+    }
+
+    /* ============================================================
+     * LECTURER: SESSION RECOVERY
+     * ============================================================ */
+    async function tryRecoverSession(savedSession) {
+        if (!isApiConfigured()) {
+            clearLecturerSession(); switchView('lecturer-setup-view'); loadCoursesIntoSetup(); return;
+        }
+        try {
+            const res = await apiRequest('getSessionById', { sessionId: savedSession.sessionId });
+            if (!res.success || !res.data) {
+                clearLecturerSession(); switchView('lecturer-setup-view'); loadCoursesIntoSetup(); return;
+            }
+            const session = res.data;
+            if (String(session.status).toUpperCase() !== 'ACTIVE') {
+                clearLecturerSession();
+                showToast('info', 'Sesi sebelumnya sudah berakhir');
+                switchView('lecturer-setup-view'); loadCoursesIntoSetup();
+                return;
+            }
+            appState.lecturer.session = Object.assign({}, session, { courseName: savedSession.courseName || '' });
+            saveLecturerSession();
+            const infoEl = document.getElementById('recover-session-info');
+            if (infoEl) {
+                infoEl.textContent = 'Sesi aktif ditemukan: ' + (session.kelas || '') +
+                    ' • Pertemuan ' + (session.pertemuan || '') +
+                    ' • ' + (session.jamMulai || '') + '-' + (session.jamSelesai || '');
+            }
+            openModal('recover-session-modal');
+        } catch (e) {
+            console.warn('[tryRecoverSession]', e);
+            clearLecturerSession(); switchView('lecturer-setup-view'); loadCoursesIntoSetup();
+        }
+    }
+    async function resumeRecoveredSession() {
+        closeModal('recover-session-modal');
+        if (!appState.lecturer.session) return;
+        await enterScannerView();
+    }
+    function discardRecoveredSession() {
+        closeModal('recover-session-modal');
+        appState.lecturer.session = null;
+        clearLecturerSession(); saveAppState();
+        switchView('lecturer-setup-view'); loadCoursesIntoSetup();
+    }
+
+    /* ============================================================
+     * INIT
+     * ============================================================ */
+    async function initializeApp() {
+        const saved = loadAppState();
+        if (saved && typeof saved === 'object') {
+            if (saved.student) appState.student = saved.student;
+            if (saved.currentUser) appState.currentUser = saved.currentUser;
+            if (saved.userRole) appState.userRole = saved.userRole;
+            if (saved.attendance) appState.attendance = Object.assign(appState.attendance, saved.attendance);
+            if (saved.schedule) appState.schedule = saved.schedule;
+            if (saved.reminders) appState.reminders = saved.reminders;
+            if (saved.nextClass) appState.nextClass = saved.nextClass;
+        }
+        if (!appState.student) {
+            const student = getCurrentStudent();
+            if (student) { appState.student = student; appState.currentUser = student; appState.userRole = 'student'; }
+        }
+        if (appState.student && appState.student.npm && isApiConfigured()) {
+            try {
+                const res = await apiRequest('getStudent', { npm: appState.student.npm });
+                if (!res.success) { clearStudent(); }
+                else {
+                    appState.student = {
+                        npm: String(res.data.npm), nama: String(res.data.nama || ''),
+                        semester: res.data.semester, kelas: String(res.data.kelas || ''),
+                        status: String(res.data.status || 'Aktif')
+                    };
+                    appState.currentUser = appState.student;
+                    appState.userRole = 'student';
+                    saveStudent(appState.student);
+                }
+            } catch (e) { console.warn('[init] validate student', e); }
+        }
+        renderApp();
+        if (appState.student && isApiConfigured()) {
+            refreshStudentData().then(function () {
+                renderStudentDashboard();
+                renderAttendanceHistory();
+                renderCalendar();
+                renderReminders();
+                renderSchedule();
+            });
+        }
+        if (isNotifOptedIn() && appState.student) {
+            startReminderChecker();
+        }
+        if (CONFIG.DEBUG) console.log('[initializeApp]', { apiConfigured: isApiConfigured(), appState: appState });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+        initializeApp();
+    }
+    </script>
+</body>
+</html>
