@@ -557,7 +557,7 @@ Proyek ini dilisensikan under **MIT License** — bebas digunakan, dimodifikasi,
 ```
 MIT License
 
-Copyright (c) 2026 [Nama Anda]
+Copyright (c) 2026 [Felisa Aziva]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
