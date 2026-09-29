@@ -473,6 +473,11 @@
                         <tr><td colspan="5" class="text-center text-muted" style="padding: 20px;">Memuat…</td></tr>
                     </tbody>
                 </table>
+                <div id="sheet-link-box" class="hidden" style="margin-top:14px; padding-top:12px; border-top:1px solid #e2e8f0; text-align:center; font-size:0.85rem;">
+                    <a id="sheet-link" href="#" target="_blank" rel="noopener noreferrer" style="color:#16a34a; text-decoration:none; font-weight:600;">
+                        <i class="fas fa-table"></i> Terhubung ke Google Sheets
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -743,6 +748,8 @@
      * Lihat README.md untuk cara mendapatkan URL tersebut.
      * ============================================================ */
     const CONFIG = {
+        // Link spreadsheet backend (buka Google Sheets → salin URL dari address bar). Kosongkan untuk menyembunyikan tautan.
+        SPREADSHEET_URL: '',
         API_URL: 'https://script.google.com/macros/s/AKfycbwjBmMVuxa5dFErGSo_nlqGmFfQ8GzWAXCVhJUcjKqzKo0Okusf7_MFnClO_KouKhSk/exec', // ← GANTI dengan URL Web App Apps Script Anda
         STORAGE_KEY: 'digital_attendance_state',
         STUDENT_KEY: 'digital_attendance_student',
@@ -2169,6 +2176,13 @@
         }
     }
     function renderLectureMonitor() {
+        const linkBox = document.getElementById('sheet-link-box');
+        const linkEl = document.getElementById('sheet-link');
+        if (linkBox && linkEl) {
+            const u = String(CONFIG.SPREADSHEET_URL || '').trim();
+            if (/^https:\/\/docs\.google\.com\/spreadsheets\//.test(u)) { linkEl.href = u; linkBox.classList.remove('hidden'); }
+            else linkBox.classList.add('hidden');
+        }
         const s = appState.lecturer.session;
         const tbody = document.getElementById('monitor-tbody');
         if (!tbody || !s) return;
