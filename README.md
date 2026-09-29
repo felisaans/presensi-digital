@@ -22,7 +22,7 @@ Sistem Presensi Digital adalah aplikasi web untuk mencatat kehadiran mahasiswa m
 
 Dibangun **100% tanpa framework backend** — hanya memanfaatkan GitHub Pages sebagai hosting frontend dan Google Apps Script sebagai API. Cocok untuk:
 
-- 🎓 Proyek akhir mata kuliah RPL / Pemrograman Web
+- 🎓 Proyek tugas mata kuliah RPL / Pemrograman Web
 - 🏫 Prototype sistem akademik skala kecil
 - 📚 Pembelajaran integrasi frontend + Google Workspace
 
