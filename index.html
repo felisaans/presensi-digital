@@ -945,6 +945,30 @@
     // Respons selalu { success, message, data }.
     // Tambahan flag lokal `networkError: true` bila kegagalan berasal dari jaringan /
     // timeout / server tidak merespon — BUKAN penolakan bisnis dari backend.
+    // Versi backend (Code.gs) yang diharapkan frontend ini.
+    const EXPECTED_BACKEND_VERSION = '2.1.0';
+    let _backendWarned = false;
+    function showBackendOutdated(detail) {
+        if (_backendWarned) return;
+        _backendWarned = true;
+        const bar = document.createElement('div');
+        bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px 14px;font-size:13px;line-height:1.4;text-align:center;';
+        bar.innerHTML = '<b>Backend Apps Script belum versi terbaru.</b> ' + escapeHtml(detail || '') +
+            ' Tempel Code.gs terbaru, lalu Deploy → Manage deployments → Edit → Version: <b>New version</b>. ' +
+            '<span style="text-decoration:underline;cursor:pointer;margin-left:8px;" onclick="this.parentNode.remove()">tutup</span>';
+        document.body.appendChild(bar);
+    }
+    async function checkBackendVersion() {
+        if (!isApiConfigured()) return;
+        try {
+            const res = await fetch(CONFIG.API_URL, { method: 'GET', redirect: 'follow' });
+            const json = await res.json();
+            const v = json && json.data && json.data.version;
+            if (v !== EXPECTED_BACKEND_VERSION) {
+                showBackendOutdated('Terdeteksi versi ' + (v || 'lama/tidak diketahui') + ', dibutuhkan ' + EXPECTED_BACKEND_VERSION + '.');
+            }
+        } catch (e) { console.warn('[checkBackendVersion]', e); }
+    }
     async function apiRequest(action, data, opts) {
         data = data || {};
         opts = opts || {};
@@ -977,6 +1001,7 @@
                 try { json = await res.json(); }
                 catch (e) { return fail('Format respons tidak valid'); }
                 if (!json || typeof json !== 'object') return fail('Format respons tidak sesuai');
+                if (json.success === false && /tidak dikenal/i.test(String(json.message || ''))) showBackendOutdated(String(json.message));
                 return json;
             } catch (err) {
                 if (timer) clearTimeout(timer);
@@ -1988,8 +2013,28 @@
         const s = appState.lecturer.session;
         if (!s) return;
         const res = await apiRequest('getClassStudents', { semester: s.semester, kelas: s.kelas });
-        if (res.success && Array.isArray(res.data)) appState.lecturer.students = res.data;
-        else appState.lecturer.students = [];
+        if (res.success && Array.isArray(res.data)) {
+            appState.lecturer.students = res.data;
+            appState.lecturer.studentsError = '';
+        } else {
+            appState.lecturer.students = [];
+            appState.lecturer.studentsError = (res && res.message) || 'respons tidak valid';
+            console.warn('[getClassStudents] gagal:', res);
+        }
+    }
+    // Gabungkan daftar kelas dengan yang sudah scan, supaya yang sudah absen
+    // tetap tampil walau daftar kelas gagal dimuat / tidak cocok.
+    function getMonitorStudents() {
+        const list = (appState.lecturer.students || []).slice();
+        const seen = {};
+        list.forEach(function (st) { seen[String(st.npm)] = true; });
+        (appState.lecturer.attendance || []).forEach(function (a) {
+            if (!seen[String(a.npm)]) {
+                seen[String(a.npm)] = true;
+                list.push({ npm: String(a.npm), nama: a.nama || '', kelas: a.kelas || '' });
+            }
+        });
+        return list;
     }
     async function refreshSessionAttendance() {
         const s = appState.lecturer.session;
@@ -2127,7 +2172,7 @@
         const s = appState.lecturer.session;
         const tbody = document.getElementById('monitor-tbody');
         if (!tbody || !s) return;
-        const students = appState.lecturer.students || [];
+        const students = getMonitorStudents();
         const att = appState.lecturer.attendance || [];
         const search = (document.getElementById('monitor-search') || {}).value || '';
         const searchLower = search.toLowerCase().trim();
@@ -2178,7 +2223,7 @@
         }
         if (!rows.length) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">' +
-                (total === 0 ? 'Tidak ada mahasiswa di kelas ini' : 'Tidak ada hasil') + '</td></tr>';
+                (total === 0 ? (appState.lecturer.studentsError ? 'Gagal memuat daftar mahasiswa: ' + escapeHtml(appState.lecturer.studentsError) : 'Tidak ada mahasiswa di kelas ' + escapeHtml(String(s.kelas)) + ' semester ' + escapeHtml(String(s.semester)) + '. Periksa sheet Students.') : 'Tidak ada hasil') + '</td></tr>';
             return;
         }
         tbody.innerHTML = rows.map(function (r) {
@@ -2213,7 +2258,7 @@
             stopAttendancePolling();
             stopScannerClock();
             await refreshSessionAttendance();
-            const students = appState.lecturer.students || [];
+            const students = getMonitorStudents();
             const att = appState.lecturer.attendance || [];
             const hadir = att.filter(function (a) { return String(a.status).toUpperCase() === 'HADIR'; }).length;
             const telat = att.filter(function (a) { return String(a.status).toUpperCase() === 'TERLAMBAT'; }).length;
@@ -2426,6 +2471,7 @@
      * INIT
      * ============================================================ */
     async function initializeApp() {
+        checkBackendVersion();
         // 1) Pulihkan sesi dari penyimpanan lokal — TANPA menunggu jaringan.
         const saved = loadAppState();
         if (saved && typeof saved === 'object') {
