@@ -216,6 +216,9 @@
         <button class="btn btn-lecturer-top" onclick="openLecturerSetup()">
             <i class="fas fa-qrcode"></i> Mulai Absensi
         </button>
+        <button class="btn btn-lecturer-top" style="right: auto; left: 20px;" onclick="openScheduleManager()">
+            <i class="far fa-calendar-alt"></i> Kelola Jadwal
+        </button>
 
         <div class="landing-card">
             <i class="fas fa-user-check landing-icon"></i>
@@ -363,9 +366,11 @@
                         <div class="input-group" style="flex:1;">
                             <label>Kelas</label>
                             <select id="lecturer-kelas" class="input-control" required>
-                                <option value="5.1" selected>5.1</option>
-                                <option value="5.2">5.2</option>
-                                <option value="5.3">5.3</option>
+                                <option value="5_1" selected>5_1</option>
+                                <option value="5_2">5_2</option>
+                                <option value="5_3">5_3</option>
+                                <option value="5_4">5_4</option>
+                                <option value="5_5">5_5</option>
                             </select>
                         </div>
                     </div>
@@ -392,6 +397,34 @@
                     </button>
                 </form>
             </div>
+            <button class="btn btn-secondary" onclick="openScheduleManager()">
+                <i class="far fa-calendar-alt"></i> Kelola Jadwal
+            </button>
+        </div>
+    </div>
+
+    <!-- ============ LECTURER: KELOLA JADWAL ============ -->
+    <div id="lecturer-schedule-view" class="view-container hidden">
+        <header class="lecturer-header">
+            <button class="btn-back" onclick="leaveScheduleManager()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="font-bold">Kelola Jadwal</h2>
+            <p style="font-size: 0.9rem; margin-top: 4px; opacity: 0.9;">Atur jadwal kuliah per kelas</p>
+        </header>
+        <div class="app-container" style="padding: 20px;">
+            <div class="flex gap-1 mb-2">
+                <div class="input-group" style="flex:1; margin-bottom: 0;">
+                    <select id="sched-filter-kelas" class="input-control" onchange="renderScheduleManager()">
+                        <option value="">Semua Kelas</option>
+                        <option value="5_1">5_1</option>
+                        <option value="5_2">5_2</option>
+                        <option value="5_3">5_3</option>
+                        <option value="5_4">5_4</option>
+                        <option value="5_5">5_5</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" style="width: auto;" onclick="openScheduleForm()"><i class="fas fa-plus"></i> Tambah</button>
+            </div>
+            <div id="sched-manage-list"><div class="empty-state"><i class="far fa-list-alt"></i><p>Memuat jadwal…</p></div></div>
         </div>
     </div>
 
@@ -558,6 +591,75 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="schedule-form-modal">
+        <div class="modal-card">
+            <h3 class="font-bold mb-3" id="schedule-form-title">Tambah Jadwal</h3>
+            <form id="schedule-form" onsubmit="handleSaveSchedule(event)">
+                <input type="hidden" id="sched-id" value="">
+                <div class="input-group">
+                    <label>Mata Kuliah</label>
+                    <select id="sched-course" class="input-control" required>
+                        <option value="">Pilih mata kuliah</option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <div class="input-group" style="flex:1;">
+                        <label>Kelas</label>
+                        <select id="sched-kelas" class="input-control" required>
+                            <option value="5_1">5_1</option>
+                            <option value="5_2">5_2</option>
+                            <option value="5_3">5_3</option>
+                            <option value="5_4">5_4</option>
+                            <option value="5_5">5_5</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>Hari</label>
+                        <select id="sched-hari" class="input-control" required>
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                            <option value="Sabtu">Sabtu</option>
+                            <option value="Minggu">Minggu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-1">
+                    <div class="input-group" style="flex:1;">
+                        <label>Jam Mulai</label>
+                        <input type="time" id="sched-jam-mulai" class="input-control" value="08:00" required>
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>Jam Selesai</label>
+                        <input type="time" id="sched-jam-selesai" class="input-control" value="09:40" required>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <label>Ruang</label>
+                    <input type="text" id="sched-ruang" class="input-control" maxlength="50" placeholder="mis. Lab Komputer 2" autocomplete="off">
+                </div>
+                <div class="flex gap-1">
+                    <button type="button" class="btn btn-outline-muted" onclick="closeModal('schedule-form-modal')" style="flex:1;">Batal</button>
+                    <button type="submit" id="btn-save-schedule" class="btn btn-primary" style="flex:1;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="delete-schedule-modal">
+        <div class="modal-card">
+            <i class="fas fa-trash text-danger" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">Hapus jadwal?</h3>
+            <p class="text-muted mb-3" id="delete-schedule-info">—</p>
+            <div class="flex gap-1">
+                <button class="btn btn-outline-muted" onclick="closeModal('delete-schedule-modal')" style="flex:1;">Batal</button>
+                <button class="btn btn-danger" onclick="confirmDeleteSchedule()" style="flex:1;">Hapus</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-card">
             <div class="avatar" id="profile-avatar" style="width:80px; height:80px; font-size:2rem; margin: 0 auto 16px;">?</div>
@@ -646,6 +748,7 @@
         STUDENT_KEY: 'digital_attendance_student',
         SESSION_KEY: 'digital_attendance_session',
         NOTIF_KEY: 'digital_attendance_notif_opt_in',
+        REQUEST_TIMEOUT_MS: 25000,
         DEBUG: false
     };
     const SCAN_COOLDOWN_MS = 3000;
@@ -663,7 +766,7 @@
         const now = new Date();
         return {
             currentUser: null, userRole: null, student: null,
-            lecturer: { session: null, students: [], attendance: [], recap: null },
+            lecturer: { session: null, students: [], attendance: [], recap: null, schedules: [], courses: [] },
             attendance: {
                 history: [], summary: null,
                 calendarMonth: now.getMonth(),
@@ -686,6 +789,9 @@
     let _lastScanTime = 0;
     let _sessionExpiryHandled = false;
     let _pendingDeleteReminderIndex = -1;
+    let _pendingDeleteScheduleId = '';
+    let _scheduleReturnView = 'landing-view';
+    let _lastRefreshAt = 0;
 
     /* ============================================================
      * UTIL
@@ -709,6 +815,16 @@
         const p = iso.split('-');
         return parseInt(p[2],10) + ' ' + months[parseInt(p[1],10)-1] + ' ' + p[0];
     }
+    function localISODate(d) {
+        d = d || new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    // Format kelas resmi: 5_1 … 5_5. Nilai lama "5.1" ikut dinormalisasi.
+    function normalizeKelasClient(v) {
+        if (v === null || v === undefined) return '';
+        return String(v).trim().replace(/[.\-\/\s]+/g, '_').toUpperCase();
+    }
+    function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     function parseTimeMinutes(t) {
         if (!t) return null;
         const p = String(t).split(':');
@@ -720,10 +836,42 @@
 
     /* ============================================================
      * STORAGE
-     * ============================================================ */
+     * ============================================================
+     * Pembungkus aman: localStorage → sessionStorage → memori.
+     * (Sebagian browser in-app / mode privat melempar error pada localStorage.) */
+    const store = (function () {
+        const mem = {};
+        let backend = null;
+        try {
+            const k = '__da_test__';
+            window.localStorage.setItem(k, '1'); window.localStorage.removeItem(k);
+            backend = window.localStorage;
+        } catch (e) {
+            try {
+                const k2 = '__da_test__';
+                window.sessionStorage.setItem(k2, '1'); window.sessionStorage.removeItem(k2);
+                backend = window.sessionStorage;
+            } catch (e2) { backend = null; }
+        }
+        return {
+            get: function (k) {
+                if (Object.prototype.hasOwnProperty.call(mem, k)) return mem[k];
+                try { return backend ? backend.getItem(k) : null; } catch (e) { return null; }
+            },
+            set: function (k, v) {
+                try { if (backend) { backend.setItem(k, v); delete mem[k]; return; } } catch (e) { /* quota → memori */ }
+                mem[k] = String(v);
+            },
+            remove: function (k) {
+                delete mem[k];
+                try { if (backend) backend.removeItem(k); } catch (e) {}
+            }
+        };
+    })();
+
     function saveAppState() {
         try {
-            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
+            store.set(CONFIG.STORAGE_KEY, JSON.stringify({
                 currentUser: appState.currentUser, userRole: appState.userRole,
                 student: appState.student, lecturer: appState.lecturer,
                 attendance: appState.attendance, schedule: appState.schedule,
@@ -734,26 +882,26 @@
     }
     function loadAppState() {
         try {
-            const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+            const raw = store.get(CONFIG.STORAGE_KEY);
             if (!raw) return null;
             const parsed = JSON.parse(raw);
             return (parsed && typeof parsed === 'object') ? parsed : null;
         } catch (e) { console.error('[loadAppState]', e); return null; }
     }
     function clearAppState() {
-        try { localStorage.removeItem(CONFIG.STORAGE_KEY); return true; } catch (e) { return false; }
+        try { store.remove(CONFIG.STORAGE_KEY); return true; } catch (e) { return false; }
     }
     function saveStudent(student) {
         if (!student || !student.npm) return false;
         appState.student = student; appState.currentUser = student; appState.userRole = 'student';
-        try { localStorage.setItem(CONFIG.STUDENT_KEY, JSON.stringify(student)); } catch (e) {}
+        try { store.set(CONFIG.STUDENT_KEY, JSON.stringify(student)); } catch (e) {}
         saveAppState();
         return true;
     }
     function getCurrentStudent() {
         if (appState.student && appState.student.npm) return appState.student;
         try {
-            const raw = localStorage.getItem(CONFIG.STUDENT_KEY);
+            const raw = store.get(CONFIG.STUDENT_KEY);
             if (!raw) return null;
             const parsed = JSON.parse(raw);
             return (parsed && parsed.npm) ? parsed : null;
@@ -761,62 +909,86 @@
     }
     function clearStudent() {
         appState.student = null; appState.currentUser = null; appState.userRole = null;
-        try { localStorage.removeItem(CONFIG.STUDENT_KEY); } catch (e) {}
+        try { store.remove(CONFIG.STUDENT_KEY); } catch (e) {}
         saveAppState();
     }
     function saveLecturerSession() {
         try {
-            if (appState.lecturer.session) localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(appState.lecturer.session));
-            else localStorage.removeItem(CONFIG.SESSION_KEY);
+            if (appState.lecturer.session) store.set(CONFIG.SESSION_KEY, JSON.stringify(appState.lecturer.session));
+            else store.remove(CONFIG.SESSION_KEY);
         } catch (e) {}
     }
     function loadLecturerSession() {
         try {
-            const raw = localStorage.getItem(CONFIG.SESSION_KEY);
+            const raw = store.get(CONFIG.SESSION_KEY);
             if (!raw) return null;
             const s = JSON.parse(raw);
             return (s && s.sessionId) ? s : null;
         } catch (e) { return null; }
     }
     function clearLecturerSession() {
-        try { localStorage.removeItem(CONFIG.SESSION_KEY); } catch (e) {}
+        try { store.remove(CONFIG.SESSION_KEY); } catch (e) {}
     }
     function isNotifOptedIn() {
-        try { return localStorage.getItem(CONFIG.NOTIF_KEY) === '1'; } catch (e) { return false; }
+        try { return store.get(CONFIG.NOTIF_KEY) === '1'; } catch (e) { return false; }
     }
     function setNotifOptedIn(v) {
         try {
-            if (v) localStorage.setItem(CONFIG.NOTIF_KEY, '1');
-            else localStorage.removeItem(CONFIG.NOTIF_KEY);
+            if (v) store.set(CONFIG.NOTIF_KEY, '1');
+            else store.remove(CONFIG.NOTIF_KEY);
         } catch (e) {}
     }
 
     /* ============================================================
      * API
      * ============================================================ */
-    async function apiRequest(action, data) {
+    // Respons selalu { success, message, data }.
+    // Tambahan flag lokal `networkError: true` bila kegagalan berasal dari jaringan /
+    // timeout / server tidak merespon — BUKAN penolakan bisnis dari backend.
+    async function apiRequest(action, data, opts) {
         data = data || {};
+        opts = opts || {};
         if (!isApiConfigured()) {
             if (CONFIG.DEBUG) console.warn('[apiRequest] API_URL kosong. action=' + action);
             return { success: false, message: 'API belum dikonfigurasi', data: null };
         }
-        try {
-            const res = await fetch(CONFIG.API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: action, data: data }),
-                redirect: 'follow'
-            });
-            if (!res.ok) return { success: false, message: 'Server tidak merespon dengan benar (HTTP ' + res.status + ')', data: null };
-            let json;
-            try { json = await res.json(); }
-            catch (e) { return { success: false, message: 'Format respons tidak valid', data: null }; }
-            if (!json || typeof json !== 'object') return { success: false, message: 'Format respons tidak sesuai', data: null };
-            return json;
-        } catch (err) {
-            console.error('[apiRequest]', err);
-            return { success: false, message: 'Gagal terhubung ke server. Periksa koneksi internet Anda.', data: null };
+        const isRead = /^get/.test(action);          // aman diulang
+        const maxAttempts = isRead ? 2 : 1;           // tulis: jangan diulang otomatis
+        const timeoutMs = opts.timeoutMs || CONFIG.REQUEST_TIMEOUT_MS;
+        const fail = function (msg) { return { success: false, message: msg, data: null, networkError: true }; };
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs) : null;
+            try {
+                const res = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: action, data: data }),
+                    redirect: 'follow',
+                    signal: ctrl ? ctrl.signal : undefined
+                });
+                if (timer) clearTimeout(timer);
+                if (!res.ok) {
+                    if (attempt < maxAttempts) { await sleep(800); continue; }
+                    return fail('Server tidak merespon dengan benar (HTTP ' + res.status + ')');
+                }
+                let json;
+                try { json = await res.json(); }
+                catch (e) { return fail('Format respons tidak valid'); }
+                if (!json || typeof json !== 'object') return fail('Format respons tidak sesuai');
+                return json;
+            } catch (err) {
+                if (timer) clearTimeout(timer);
+                console.error('[apiRequest]', action, err);
+                if (attempt < maxAttempts) { await sleep(800); continue; }
+                const aborted = err && err.name === 'AbortError';
+                return fail(aborted
+                    ? 'Server terlalu lama merespon. Coba lagi.'
+                    : 'Gagal terhubung ke server. Periksa koneksi internet Anda.');
+            }
         }
+        return fail('Gagal terhubung ke server.');
     }
 
     /* ============================================================
@@ -893,7 +1065,7 @@
         const dayMap = { 'Senin': 1, 'Selasa': 2, 'Rabu': 3, 'Kamis': 4, 'Jumat': 5, 'Sabtu': 6, 'Minggu': 0 };
         const curDay = now.getDay();
         const curMin = now.getHours() * 60 + now.getMinutes();
-        const dayKey = now.toISOString().slice(0, 10);
+        const dayKey = localISODate(now);
         appState.reminders.forEach(function (r, i) {
             if (!r.active) return;
             if (!r.hari || !r.jam) return;
@@ -905,7 +1077,7 @@
             const triggerMin = startMin - (r.menitSebelum || 30);
             if (curMin >= triggerMin && curMin < triggerMin + 1) {
                 const key = 'notified_' + dayKey + '_' + (r.reminderId || i);
-                try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
+                try { if (store.get(key)) return; store.set(key, '1'); } catch (e) {}
                 sendBrowserNotification('Pengingat Kelas', r.course + ' • ' + r.hari + ', ' + r.jam);
             }
         });
@@ -1229,7 +1401,7 @@
                     status: String(res.data.status || 'Aktif')
                 });
             } else {
-                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: '5.1', status: 'Aktif' });
+                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: '5_1', status: 'Aktif' });
             }
             await refreshStudentData();
             renderApp();
@@ -1464,7 +1636,7 @@
             if (!map[key]) map[key] = { day: key, items: [], _order: order.indexOf(day) };
             map[key].items.push({
                 time: s.jamMulai + ' - ' + s.jamSelesai + ' WIB',
-                name: (s.mataKuliah || s.courseId || '') + (s.kelas ? ' (Kelas ' + s.kelas + ')' : ''),
+                name: (s.mataKuliah || s.courseId || '') + (s.kelas ? ' (Kelas ' + s.kelas + ')' : '') + (s.ruang ? ' • ' + s.ruang : ''),
                 _start: parseTimeMinutes(s.jamMulai) || 0,
                 courseId: s.courseId,
                 courseName: s.mataKuliah || s.courseId,
@@ -1524,6 +1696,7 @@
         const scheduleRes = results[2].status === 'fulfilled' ? results[2].value : { success: false };
         const reminderRes = results[3].status === 'fulfilled' ? results[3].value : { success: false };
 
+        // Jika suatu request gagal, data lama (cache) DIPERTAHANKAN — bukan dikosongkan.
         if (summaryRes.success && summaryRes.data) {
             appState.attendance.summary = {
                 hadir: summaryRes.data.hadir || 0,
@@ -1534,19 +1707,20 @@
                 izin: summaryRes.data.izin || 0,
                 sakit: summaryRes.data.sakit || 0
             };
-        } else {
+        } else if (!appState.attendance.summary) {
             appState.attendance.summary = { hadir: 0, absen: 0, telat: 0, persen: 0 };
         }
-        appState.attendance.history = (historyRes.success && Array.isArray(historyRes.data))
-            ? historyRes.data.map(normalizeHistoryItem) : [];
+        if (historyRes.success && Array.isArray(historyRes.data)) {
+            appState.attendance.history = historyRes.data.map(normalizeHistoryItem);
+        }
         if (scheduleRes.success && Array.isArray(scheduleRes.data)) {
             appState.schedule = groupSchedulesByDay(scheduleRes.data);
             appState.nextClass = pickNextClass(scheduleRes.data);
-        } else {
-            appState.schedule = []; appState.nextClass = null;
         }
-        appState.reminders = (reminderRes.success && Array.isArray(reminderRes.data))
-            ? reminderRes.data.map(normalizeReminder) : [];
+        if (reminderRes.success && Array.isArray(reminderRes.data)) {
+            appState.reminders = reminderRes.data.map(normalizeReminder);
+        }
+        _lastRefreshAt = Date.now();
         saveAppState();
     }
 
@@ -1557,7 +1731,7 @@
         const saved = loadLecturerSession();
         if (saved && saved.sessionId) { tryRecoverSession(saved); return; }
         const tglEl = document.getElementById('lecturer-tanggal');
-        if (tglEl && !tglEl.value) tglEl.value = new Date().toISOString().slice(0, 10);
+        if (tglEl && !tglEl.value) tglEl.value = localISODate();
         switchView('lecturer-setup-view');
         loadCoursesIntoSetup();
     }
@@ -1622,6 +1796,164 @@
         } catch (e) {
             handleApiError(e, 'Gagal membuat sesi');
         } finally { setButtonLoading(btn, false); }
+    }
+
+    /* ============================================================
+     * LECTURER: KELOLA JADWAL
+     * ============================================================ */
+    const DAY_ORDER = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+    async function openScheduleManager() {
+        _scheduleReturnView = appState.ui.currentView === 'lecturer-setup-view' ? 'lecturer-setup-view' : 'landing-view';
+        switchView('lecturer-schedule-view');
+        if (!isApiConfigured()) {
+            const box = document.getElementById('sched-manage-list');
+            if (box) box.innerHTML = '<div class="empty-state"><i class="far fa-list-alt"></i><p>API belum dikonfigurasi</p></div>';
+            return;
+        }
+        await Promise.allSettled([loadScheduleCourses(), loadAllSchedules()]);
+        renderScheduleManager();
+    }
+    function leaveScheduleManager() {
+        switchView(_scheduleReturnView || 'landing-view');
+        if (_scheduleReturnView === 'lecturer-setup-view') loadCoursesIntoSetup();
+    }
+    async function loadScheduleCourses() {
+        const res = await apiRequest('getCourses', {});
+        if (res.success && Array.isArray(res.data)) appState.lecturer.courses = res.data;
+        else showToast('error', res.message || 'Gagal memuat mata kuliah');
+    }
+    async function loadAllSchedules() {
+        const res = await apiRequest('getAllSchedules', {});
+        if (res.success && Array.isArray(res.data)) {
+            appState.lecturer.schedules = res.data;
+            appState.lecturer._schedulesLoaded = true;
+        } else {
+            showToast('error', res.message || 'Gagal memuat jadwal');
+        }
+    }
+    function renderScheduleManager() {
+        const box = document.getElementById('sched-manage-list');
+        if (!box) return;
+        const filterEl = document.getElementById('sched-filter-kelas');
+        const kelas = filterEl ? filterEl.value : '';
+        const all = appState.lecturer.schedules || [];
+        const list = kelas ? all.filter(function (x) { return x.kelas === kelas; }) : all;
+        if (!list.length) {
+            box.innerHTML = '<div class="empty-state"><i class="far fa-list-alt"></i><p>' +
+                (all.length === 0 ? 'Belum ada jadwal. Tekan Tambah untuk membuat.' : 'Tidak ada jadwal untuk kelas ini') + '</p></div>';
+            return;
+        }
+        const byDay = {};
+        list.forEach(function (x) { (byDay[x.hari] = byDay[x.hari] || []).push(x); });
+        const days = Object.keys(byDay).sort(function (a, b) {
+            const ia = DAY_ORDER.indexOf(a), ib = DAY_ORDER.indexOf(b);
+            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        });
+        box.innerHTML = days.map(function (day) {
+            const rows = byDay[day].map(function (x) {
+                const meta = [x.jamMulai + ' - ' + x.jamSelesai, 'Kelas ' + x.kelas];
+                if (x.ruang) meta.push(x.ruang);
+                const id = escapeHtml(x.scheduleId);
+                return '<div class="list-item">' +
+                    '<div class="list-info">' +
+                        '<h4>' + escapeHtml(x.mataKuliah || x.courseId) + '</h4>' +
+                        '<p><i class="far fa-clock"></i> ' + escapeHtml(meta.join(' • ')) + '</p>' +
+                    '</div>' +
+                    '<div style="display:flex; align-items:center; gap:4px;">' +
+                        '<button class="icon-btn-sm" style="color: var(--primary);" onclick="openScheduleForm(\'' + id + '\')" title="Ubah"><i class="fas fa-pen"></i></button>' +
+                        '<button class="icon-btn-sm" onclick="handleDeleteSchedule(\'' + id + '\')" title="Hapus"><i class="fas fa-trash"></i></button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            return '<h4 class="text-primary mb-1 mt-2">' + escapeHtml(day.toUpperCase()) + '</h4>' + rows;
+        }).join('');
+    }
+    function populateScheduleCourseSelect(selected) {
+        const sel = document.getElementById('sched-course');
+        if (!sel) return false;
+        const courses = appState.lecturer.courses || [];
+        if (!courses.length) {
+            sel.innerHTML = '<option value="">Belum ada mata kuliah</option>';
+            return false;
+        }
+        sel.innerHTML = '<option value="">Pilih mata kuliah</option>' + courses.map(function (c) {
+            return '<option value="' + escapeHtml(c.courseId) + '">' + escapeHtml(c.mataKuliah || c.courseId) + '</option>';
+        }).join('');
+        sel.value = selected || '';
+        return true;
+    }
+    function openScheduleForm(scheduleId) {
+        if (!isApiConfigured()) { showToast('error', 'API belum dikonfigurasi'); return; }
+        const el = function (id) { return document.getElementById(id); };
+        const editing = scheduleId ? (appState.lecturer.schedules || []).find(function (x) { return x.scheduleId === scheduleId; }) : null;
+        if (scheduleId && !editing) { showToast('error', 'Jadwal tidak ditemukan'); return; }
+        const hasCourses = populateScheduleCourseSelect(editing ? editing.courseId : '');
+        if (!hasCourses) { showToast('error', 'Belum ada mata kuliah. Jalankan seedDatabase() di Apps Script.'); return; }
+        const filterEl = el('sched-filter-kelas');
+        el('schedule-form-title').textContent = editing ? 'Ubah Jadwal' : 'Tambah Jadwal';
+        el('sched-id').value = editing ? editing.scheduleId : '';
+        el('sched-kelas').value = editing ? editing.kelas : ((filterEl && filterEl.value) || '5_1');
+        el('sched-hari').value = editing ? editing.hari : 'Senin';
+        el('sched-jam-mulai').value = editing ? editing.jamMulai : '08:00';
+        el('sched-jam-selesai').value = editing ? editing.jamSelesai : '09:40';
+        el('sched-ruang').value = editing ? (editing.ruang || '') : '';
+        openModal('schedule-form-modal');
+    }
+    async function handleSaveSchedule(event) {
+        event.preventDefault();
+        const el = function (id) { return document.getElementById(id); };
+        const scheduleId = el('sched-id').value;
+        const payload = {
+            courseId: el('sched-course').value,
+            kelas: el('sched-kelas').value,
+            hari: el('sched-hari').value,
+            jamMulai: el('sched-jam-mulai').value,
+            jamSelesai: el('sched-jam-selesai').value,
+            ruang: el('sched-ruang').value.trim()
+        };
+        if (!payload.courseId) { showToast('error', 'Pilih mata kuliah'); return; }
+        if (!payload.jamMulai || !payload.jamSelesai) { showToast('error', 'Jam wajib diisi'); return; }
+        if (payload.jamSelesai <= payload.jamMulai) { showToast('error', 'Jam selesai harus setelah jam mulai'); return; }
+        const btn = el('btn-save-schedule');
+        setButtonLoading(btn, true);
+        try {
+            let res;
+            if (scheduleId) { payload.scheduleId = scheduleId; res = await apiRequest('updateSchedule', payload); }
+            else { res = await apiRequest('createSchedule', payload); }
+            if (!res.success) { showToast('error', res.message || 'Gagal menyimpan jadwal'); return; }
+            closeModal('schedule-form-modal');
+            showToast('success', res.message || 'Jadwal disimpan');
+            await loadAllSchedules();
+            renderScheduleManager();
+        } catch (e) {
+            handleApiError(e, 'Gagal menyimpan jadwal');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    }
+    function handleDeleteSchedule(scheduleId) {
+        const x = (appState.lecturer.schedules || []).find(function (i) { return i.scheduleId === scheduleId; });
+        if (!x) return;
+        _pendingDeleteScheduleId = scheduleId;
+        const info = document.getElementById('delete-schedule-info');
+        if (info) info.textContent = 'Hapus jadwal ' + (x.mataKuliah || x.courseId) + ' • ' + x.hari + ' ' + x.jamMulai + ' • Kelas ' + x.kelas + '?';
+        openModal('delete-schedule-modal');
+    }
+    async function confirmDeleteSchedule() {
+        const id = _pendingDeleteScheduleId;
+        _pendingDeleteScheduleId = '';
+        closeModal('delete-schedule-modal');
+        if (!id) return;
+        try {
+            const res = await apiRequest('deleteSchedule', { scheduleId: id });
+            if (!res.success) { showToast('error', res.message || 'Gagal menghapus jadwal'); return; }
+            showToast('success', 'Jadwal dihapus');
+            await loadAllSchedules();
+            renderScheduleManager();
+        } catch (e) {
+            handleApiError(e, 'Gagal menghapus jadwal');
+        }
     }
 
     /* ============================================================
@@ -2047,6 +2379,12 @@
         }
         try {
             const res = await apiRequest('getSessionById', { sessionId: savedSession.sessionId });
+            if (res.networkError) {
+                // Gagal koneksi ≠ sesi hilang: simpan sesi lokal, jangan dibuang.
+                showToast('error', 'Tidak dapat memeriksa sesi sebelumnya. Periksa koneksi lalu coba lagi.');
+                switchView('landing-view');
+                return;
+            }
             if (!res.success || !res.data) {
                 clearLecturerSession(); switchView('lecturer-setup-view'); loadCoursesIntoSetup(); return;
             }
@@ -2068,7 +2406,8 @@
             openModal('recover-session-modal');
         } catch (e) {
             console.warn('[tryRecoverSession]', e);
-            clearLecturerSession(); switchView('lecturer-setup-view'); loadCoursesIntoSetup();
+            showToast('error', 'Tidak dapat memeriksa sesi sebelumnya. Periksa koneksi lalu coba lagi.');
+            switchView('landing-view');
         }
     }
     async function resumeRecoveredSession() {
@@ -2087,6 +2426,7 @@
      * INIT
      * ============================================================ */
     async function initializeApp() {
+        // 1) Pulihkan sesi dari penyimpanan lokal — TANPA menunggu jaringan.
         const saved = loadAppState();
         if (saved && typeof saved === 'object') {
             if (saved.student) appState.student = saved.student;
@@ -2101,37 +2441,64 @@
             const student = getCurrentStudent();
             if (student) { appState.student = student; appState.currentUser = student; appState.userRole = 'student'; }
         }
-        if (appState.student && appState.student.npm && isApiConfigured()) {
-            try {
-                const res = await apiRequest('getStudent', { npm: appState.student.npm });
-                if (!res.success) { clearStudent(); }
-                else {
-                    appState.student = {
-                        npm: String(res.data.npm), nama: String(res.data.nama || ''),
-                        semester: res.data.semester, kelas: String(res.data.kelas || ''),
-                        status: String(res.data.status || 'Aktif')
-                    };
-                    appState.currentUser = appState.student;
-                    appState.userRole = 'student';
-                    saveStudent(appState.student);
-                }
-            } catch (e) { console.warn('[init] validate student', e); }
+        // Kalender selalu mulai dari bulan berjalan
+        const nowD = new Date();
+        appState.attendance.calendarMonth = nowD.getMonth();
+        appState.attendance.calendarYear = nowD.getFullYear();
+        appState.attendance.selectedDate = null;
+        // Data lama di cache mungkin masih berformat "5.1"
+        if (appState.student) {
+            appState.student.kelas = normalizeKelasClient(appState.student.kelas);
+            appState.currentUser = appState.student;
         }
+
+        // 2) Tampilkan UI langsung dari cache.
         renderApp();
-        if (appState.student && isApiConfigured()) {
-            refreshStudentData().then(function () {
-                renderStudentDashboard();
-                renderAttendanceHistory();
-                renderCalendar();
-                renderReminders();
-                renderSchedule();
-            });
-        }
-        if (isNotifOptedIn() && appState.student) {
-            startReminderChecker();
+        if (isNotifOptedIn() && appState.student) startReminderChecker();
+
+        // 3) Sinkronisasi di latar belakang. Kegagalan jaringan TIDAK pernah logout.
+        if (appState.student && appState.student.npm && isApiConfigured()) {
+            syncStudentInBackground();
         }
         if (CONFIG.DEBUG) console.log('[initializeApp]', { apiConfigured: isApiConfigured(), appState: appState });
     }
+
+    // Logout HANYA terjadi lewat tombol "Keluar Akun" (handleLogout).
+    async function syncStudentInBackground() {
+        if (!appState.student || !appState.student.npm) return;
+        const res = await apiRequest('getStudent', { npm: appState.student.npm });
+        if (res.success && res.data) {
+            saveStudent({
+                npm: String(res.data.npm), nama: String(res.data.nama || ''),
+                semester: res.data.semester, kelas: String(res.data.kelas || ''),
+                status: String(res.data.status || 'Aktif')
+            });
+            renderStudentHeader();
+            renderProfileModal();
+        } else if (!res.networkError && res.data && (res.data.code === 'STUDENT_NOT_FOUND' || res.data.code === 'STUDENT_INACTIVE')) {
+            showToast('info', 'Akun tidak terdaftar/aktif di server. Sesi tetap dipertahankan; hubungi admin bila ini keliru.');
+        }
+        await refreshStudentData();
+        if (appState.student) {
+            renderStudentDashboard();
+            renderAttendanceHistory();
+            renderCalendar();
+            renderReminders();
+            renderSchedule();
+        }
+    }
+
+    // Segarkan data saat koneksi kembali / tab dibuka lagi (senyap, tanpa logout).
+    window.addEventListener('online', function () {
+        if (appState.student && isApiConfigured()) syncStudentInBackground();
+    });
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState !== 'visible') return;
+        if (!appState.student || !isApiConfigured()) return;
+        if (Date.now() - _lastRefreshAt < 60000) return;
+        syncStudentInBackground();
+    });
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeApp);
     } else {
