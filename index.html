@@ -682,6 +682,41 @@
         <button class="btn-back" style="position:absolute; top:20px; left:20px; background:white; color:var(--text-main); border-radius:50%; width:40px; height:40px; box-shadow:var(--shadow)" onclick="closeModal('profile-modal')"><i class="fas fa-times"></i></button>
     </div>
 
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal-card" style="text-align:left;">
+            <div style="text-align:center;">
+                <i class="fas fa-user-plus text-primary" style="font-size: 3rem; margin-bottom: 16px;"></i>
+                <h3 class="font-bold mb-1">NPM belum terdaftar</h3>
+                <p class="text-muted mb-3" style="font-size:0.9rem;">Lengkapi data singkat ini untuk langsung masuk.</p>
+            </div>
+            <form id="register-form" onsubmit="handleRegisterStudent(event)">
+                <div class="input-group mb-2">
+                    <label>NPM</label>
+                    <input type="text" id="reg-npm" class="input-control" readonly>
+                </div>
+                <div class="input-group mb-2">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="reg-nama" class="input-control" maxlength="100" placeholder="Sesuai data kampus" required autocomplete="off">
+                </div>
+                <div class="input-group mb-3">
+                    <label>Kelas</label>
+                    <select id="reg-kelas" class="input-control" required>
+                        <option value="">Pilih kelas</option>
+                        <option value="5_1">5_1</option>
+                        <option value="5_2">5_2</option>
+                        <option value="5_3">5_3</option>
+                        <option value="5_4">5_4</option>
+                        <option value="5_5">5_5</option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <button type="button" class="btn btn-outline-muted" onclick="closeModal('register-modal')" style="flex:1;">Batal</button>
+                    <button type="submit" id="btn-register" class="btn btn-primary" style="flex:1;">Daftar &amp; Masuk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="logout-modal">
         <div class="modal-card">
             <i class="fas fa-sign-out-alt text-danger" style="font-size: 3rem; margin-bottom: 16px;"></i>
@@ -953,7 +988,7 @@
     // Tambahan flag lokal `networkError: true` bila kegagalan berasal dari jaringan /
     // timeout / server tidak merespon — BUKAN penolakan bisnis dari backend.
     // Versi backend (Code.gs) yang diharapkan frontend ini.
-    const EXPECTED_BACKEND_VERSION = '2.1.1';
+    const EXPECTED_BACKEND_VERSION = '2.2.0';
     let _backendWarned = false;
     function showBackendOutdated(detail) {
         if (_backendWarned) return;
@@ -1426,7 +1461,15 @@
         try {
             if (isApiConfigured()) {
                 const res = await apiRequest('getStudent', { npm: npm });
-                if (!res.success) { showToast('error', res.message || 'Mahasiswa tidak ditemukan'); return; }
+                if (!res.success) {
+                    // NPM belum ada di sheet Students → tawarkan daftar mandiri.
+                    if (!res.networkError && res.data && res.data.code === 'STUDENT_NOT_FOUND') {
+                        openRegisterModal(npm);
+                        return;
+                    }
+                    showToast('error', res.message || 'Mahasiswa tidak ditemukan');
+                    return;
+                }
                 saveStudent({
                     npm: String(res.data.npm), nama: String(res.data.nama || ''),
                     semester: res.data.semester, kelas: String(res.data.kelas || ''),
@@ -1442,6 +1485,51 @@
         } catch (e) {
             handleApiError(e, 'Gagal masuk');
         } finally { setLoading(false); }
+    }
+
+    /* ============================================================
+     * STUDENT: DAFTAR MANDIRI (NPM belum terdaftar)
+     * ============================================================ */
+    function openRegisterModal(npm) {
+        const n = document.getElementById('reg-npm'); if (n) n.value = npm;
+        const nm = document.getElementById('reg-nama'); if (nm) nm.value = '';
+        const k = document.getElementById('reg-kelas'); if (k) k.value = '';
+        openModal('register-modal');
+    }
+    async function handleRegisterStudent(event) {
+        event.preventDefault();
+        const npm = (document.getElementById('reg-npm').value || '').trim();
+        const nama = (document.getElementById('reg-nama').value || '').replace(/\s+/g, ' ').trim();
+        const kelas = document.getElementById('reg-kelas').value;
+        if (!/^\d{6,20}$/.test(npm)) { showToast('error', 'NPM harus berupa angka (6–20 digit)'); return; }
+        if (nama.length < 3) { showToast('error', 'Nama wajib diisi (minimal 3 karakter)'); return; }
+        if (!kelas) { showToast('error', 'Pilih kelas'); return; }
+        const btn = document.getElementById('btn-register');
+        setButtonLoading(btn, true);
+        try {
+            const res = await apiRequest('registerStudent', { npm: npm, nama: nama, kelas: kelas });
+            if (!res.success) {
+                if (!res.networkError && res.data && res.data.code === 'STUDENT_EXISTS') {
+                    closeModal('register-modal');
+                    showToast('info', 'NPM sudah terdaftar. Silakan tekan Masuk lagi.');
+                    return;
+                }
+                showToast('error', res.message || 'Gagal mendaftar');
+                return;
+            }
+            saveStudent({
+                npm: String(res.data.npm), nama: String(res.data.nama || ''),
+                semester: res.data.semester, kelas: String(res.data.kelas || ''),
+                status: String(res.data.status || 'Aktif')
+            });
+            closeModal('register-modal');
+            await refreshStudentData();
+            renderApp();
+            if (isNotifOptedIn()) startReminderChecker();
+            showToast('success', 'Pendaftaran berhasil, selamat datang!');
+        } catch (e) {
+            handleApiError(e, 'Gagal mendaftar');
+        } finally { setButtonLoading(btn, false); }
     }
 
     function handleLogout() {
