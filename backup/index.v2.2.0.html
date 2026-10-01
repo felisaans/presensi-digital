@@ -228,7 +228,7 @@
             <form id="login-form" onsubmit="handleStudentLogin(event)">
                 <div class="input-group">
                     <label>NPM</label>
-                    <input type="text" id="input-npm" class="input-control" placeholder="Masukkan NPM" inputmode="numeric" required autocomplete="off">
+                    <input type="text" id="input-npm" class="input-control" placeholder="Masukkan NPM" required autocomplete="off">
                 </div>
                 <button type="submit" class="btn btn-primary mt-2" id="btn-login">Masuk ke Dashboard</button>
             </form>
@@ -366,6 +366,11 @@
                         <div class="input-group" style="flex:1;">
                             <label>Kelas</label>
                             <select id="lecturer-kelas" class="input-control" required>
+                                <option value="5_1" selected>5_1</option>
+                                <option value="5_2">5_2</option>
+                                <option value="5_3">5_3</option>
+                                <option value="5_4">5_4</option>
+                                <option value="5_5">5_5</option>
                             </select>
                         </div>
                     </div>
@@ -410,6 +415,11 @@
                 <div class="input-group" style="flex:1; margin-bottom: 0;">
                     <select id="sched-filter-kelas" class="input-control" onchange="renderScheduleManager()">
                         <option value="">Semua Kelas</option>
+                        <option value="5_1">5_1</option>
+                        <option value="5_2">5_2</option>
+                        <option value="5_3">5_3</option>
+                        <option value="5_4">5_4</option>
+                        <option value="5_5">5_5</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" style="width: auto;" onclick="openScheduleForm()"><i class="fas fa-plus"></i> Tambah</button>
@@ -601,6 +611,11 @@
                     <div class="input-group" style="flex:1;">
                         <label>Kelas</label>
                         <select id="sched-kelas" class="input-control" required>
+                            <option value="5_1">5_1</option>
+                            <option value="5_2">5_2</option>
+                            <option value="5_3">5_3</option>
+                            <option value="5_4">5_4</option>
+                            <option value="5_5">5_5</option>
                         </select>
                     </div>
                     <div class="input-group" style="flex:1;">
@@ -687,6 +702,11 @@
                     <label>Kelas</label>
                     <select id="reg-kelas" class="input-control" required>
                         <option value="">Pilih kelas</option>
+                        <option value="5_1">5_1</option>
+                        <option value="5_2">5_2</option>
+                        <option value="5_3">5_3</option>
+                        <option value="5_4">5_4</option>
+                        <option value="5_5">5_5</option>
                     </select>
                 </div>
                 <div class="flex gap-1">
@@ -755,30 +775,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- ============================================================
-         DAFTAR ISI index.html  (single-file — sengaja TIDAK dipecah)
-         ------------------------------------------------------------
-         Cari bagian dengan menekan Ctrl+F pada judul bertanda "* NAMA" di bawah.
-
-         HTML (urutan di <body>)
-           LANDING · STUDENT · LECTURER SETUP · LECTURER: KELOLA JADWAL
-           LECTURER SCANNER · LECTURER RECAP · MODALS (profil, logout, daftar mandiri, dll.)
-
-         STYLE     : variabel tema (:root), komponen, modal, toast
-
-         SCRIPT    (urutan di bawah; tiap bagian diawali blok komentar "* NAMA")
-           CONFIG  → STATE → UTIL → API → LOADING & ERROR → TOAST → NOTIFICATION
-           VIEW / TAB / MODAL → RENDER: STUDENT → QR GENERATION
-           STUDENT: LOGIN / LOGOUT → STUDENT: DAFTAR MANDIRI → STUDENT: REMINDER → STUDENT: DATA
-           LECTURER: SETUP → LECTURER: KELOLA JADWAL → LECTURER: SCANNER
-           LECTURER: END SESSION & RECAP → EXPORT → LECTURER: SESSION RECOVERY → INIT
-
-         Titik sambung penting
-           CONFIG.API_URL / CONFIG.KELAS_LIST (satu-satunya daftar kelas; harus sama dengan CLASS_LIST di Code.gs)
-           EXPECTED_BACKEND_VERSION (harus sama dengan APP_VERSION di Code.gs)
-           isValidNpm (aturan NPM yang sama dengan backend)
-           populateKelasSelects (dipanggil dari initializeApp)
-         ============================================================ -->
     <script>
     /* ============================================================
      * CONFIG
@@ -795,13 +791,10 @@
         SESSION_KEY: 'digital_attendance_session',
         NOTIF_KEY: 'digital_attendance_notif_opt_in',
         REQUEST_TIMEOUT_MS: 25000,
-        // Satu-satunya sumber daftar kelas di frontend (dipakai semua <select> lewat populateKelasSelects).
-        // Harus sama dengan CLASS_LIST di Code.gs.
-        KELAS_LIST: ['5_1', '5_2', '5_3', '5_4', '5_5'],
         DEBUG: false
     };
     const SCAN_COOLDOWN_MS = 3000;
-    const POLL_INTERVAL_MS = 5000;
+    const POLL_INTERVAL_MS = 3000;
     const REMINDER_CHECK_INTERVAL_MS = 60000;
 
     function isApiConfigured() {
@@ -832,7 +825,6 @@
     let _html5QrCode = null;
     let _scannerRunning = false;
     let _attendancePollingId = null;
-    let _pollingWanted = false;   // true selama sesi dosen aktif; membedakan "dijeda (tab tersembunyi)" dari "dihentikan"
     let _scannerClockId = null;
     let _reminderCheckId = null;
     let _lastScannedNpm = null;
@@ -869,31 +861,7 @@
         d = d || new Date();
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
-    // NPM valid = 6–20 digit angka. Aturan yang sama dipakai backend (isValidNpm di Code.gs).
-    function isValidNpm(npm) {
-        return /^\d{6,20}$/.test(String(npm === null || npm === undefined ? '' : npm));
-    }
-    // Isi semua <select> kelas dari CONFIG.KELAS_LIST. Opsi placeholder (value kosong, mis. "Semua Kelas" / "Pilih kelas") dipertahankan.
-    // Select tanpa placeholder (form dosen) default ke kelas pertama.
-    function populateKelasSelects() {
-        ['lecturer-kelas', 'sched-filter-kelas', 'sched-kelas', 'reg-kelas'].forEach(function (id) {
-            const sel = document.getElementById(id);
-            if (!sel) return;
-            const prev = sel.value;
-            let hasPlaceholder = false;
-            Array.prototype.slice.call(sel.options).forEach(function (o) {
-                if (o.value === '') hasPlaceholder = true; else sel.removeChild(o);
-            });
-            CONFIG.KELAS_LIST.forEach(function (k) {
-                const o = document.createElement('option');
-                o.value = k; o.textContent = k;
-                sel.appendChild(o);
-            });
-            if (prev && CONFIG.KELAS_LIST.indexOf(prev) !== -1) sel.value = prev;
-            else sel.value = hasPlaceholder ? '' : CONFIG.KELAS_LIST[0];
-        });
-    }
-    // Format kelas resmi: lihat CONFIG.KELAS_LIST. Nilai lama "5.1" ikut dinormalisasi.
+    // Format kelas resmi: 5_1 … 5_5. Nilai lama "5.1" ikut dinormalisasi.
     function normalizeKelasClient(v) {
         if (v === null || v === undefined) return '';
         return String(v).trim().replace(/[.\-\/\s]+/g, '_').toUpperCase();
@@ -1020,7 +988,7 @@
     // Tambahan flag lokal `networkError: true` bila kegagalan berasal dari jaringan /
     // timeout / server tidak merespon — BUKAN penolakan bisnis dari backend.
     // Versi backend (Code.gs) yang diharapkan frontend ini.
-    const EXPECTED_BACKEND_VERSION = '2.3.0';
+    const EXPECTED_BACKEND_VERSION = '2.2.0';
     let _backendWarned = false;
     function showBackendOutdated(detail) {
         if (_backendWarned) return;
@@ -1112,7 +1080,7 @@
     /* ============================================================
      * TOAST
      * ============================================================ */
-    function showToast(type, message, durationMs) {
+    function showToast(type, message) {
         const container = document.getElementById('toast-container');
         if (!container) return;
         const toast = document.createElement('div');
@@ -1126,7 +1094,7 @@
         setTimeout(function () {
             toast.classList.remove('show');
             setTimeout(function () { toast.remove(); }, 300);
-        }, durationMs || 3200);
+        }, 3200);
     }
 
     /* ============================================================
@@ -1489,8 +1457,6 @@
         const npmInput = document.getElementById('input-npm');
         const npm = (npmInput && npmInput.value ? npmInput.value : '').trim();
         if (!npm) { showToast('error', 'NPM wajib diisi'); return; }
-        // Validasi format di sisi klien sebelum memanggil API (hemat request & tidak membuka form daftar untuk input ngawur).
-        if (!isValidNpm(npm)) { showToast('error', 'NPM harus berupa angka (6–20 digit), tanpa spasi atau huruf'); return; }
         setLoading(true);
         try {
             if (isApiConfigured()) {
@@ -1510,7 +1476,7 @@
                     status: String(res.data.status || 'Aktif')
                 });
             } else {
-                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: CONFIG.KELAS_LIST[0], status: 'Aktif' });
+                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: '5_1', status: 'Aktif' });
             }
             await refreshStudentData();
             renderApp();
@@ -1535,7 +1501,7 @@
         const npm = (document.getElementById('reg-npm').value || '').trim();
         const nama = (document.getElementById('reg-nama').value || '').replace(/\s+/g, ' ').trim();
         const kelas = document.getElementById('reg-kelas').value;
-        if (!isValidNpm(npm)) { showToast('error', 'NPM harus berupa angka (6–20 digit)'); return; }
+        if (!/^\d{6,20}$/.test(npm)) { showToast('error', 'NPM harus berupa angka (6–20 digit)'); return; }
         if (nama.length < 3) { showToast('error', 'Nama wajib diisi (minimal 3 karakter)'); return; }
         if (!kelas) { showToast('error', 'Pilih kelas'); return; }
         const btn = document.getElementById('btn-register');
@@ -1566,8 +1532,8 @@
         } finally { setButtonLoading(btn, false); }
     }
 
-    // Bersihkan seluruh sesi mahasiswa di memori + penyimpanan lokal.
-    function resetStudentSession() {
+    function handleLogout() {
+        closeModal('logout-modal');
         clearStudent();
         clearAppState();
         const now = new Date();
@@ -1578,20 +1544,8 @@
         };
         appState.schedule = []; appState.reminders = []; appState.nextClass = null;
         stopReminderChecker();
-    }
-    function handleLogout() {
-        closeModal('logout-modal');
-        resetStudentSession();
         renderApp();
         showToast('info', 'Anda telah keluar');
-    }
-    // Logout paksa karena server MENOLAK akun (bukan gangguan jaringan).
-    function forceLogout(message) {
-        closeModal('logout-modal');
-        closeModal('profile-modal');
-        resetStudentSession();
-        renderApp();
-        showToast('error', message, 7000);
     }
 
     /* ============================================================
@@ -2059,7 +2013,7 @@
         const filterEl = el('sched-filter-kelas');
         el('schedule-form-title').textContent = editing ? 'Ubah Jadwal' : 'Tambah Jadwal';
         el('sched-id').value = editing ? editing.scheduleId : '';
-        el('sched-kelas').value = editing ? editing.kelas : ((filterEl && filterEl.value) || CONFIG.KELAS_LIST[0]);
+        el('sched-kelas').value = editing ? editing.kelas : ((filterEl && filterEl.value) || '5_1');
         el('sched-hari').value = editing ? editing.hari : 'Senin';
         el('sched-jam-mulai').value = editing ? editing.jamMulai : '08:00';
         el('sched-jam-selesai').value = editing ? editing.jamSelesai : '09:40';
@@ -2188,28 +2142,11 @@
     }
     function startAttendancePolling() {
         stopAttendancePolling();
-        _pollingWanted = true;
-        if (document.visibilityState === 'hidden') return;   // akan dilanjutkan oleh handlePollingVisibility saat tab terlihat
         _attendancePollingId = setInterval(refreshSessionAttendance, POLL_INTERVAL_MS);
     }
-    // Berhenti total (sesi berakhir / keluar dari monitor).
     function stopAttendancePolling() {
-        _pollingWanted = false;
         if (_attendancePollingId) { clearInterval(_attendancePollingId); _attendancePollingId = null; }
     }
-    // Tab disembunyikan → jeda (hemat kuota Apps Script); tab terlihat lagi → segarkan sekali lalu lanjut.
-    function handlePollingVisibility() {
-        if (!_pollingWanted) return;
-        if (document.visibilityState === 'hidden') {
-            if (_attendancePollingId) { clearInterval(_attendancePollingId); _attendancePollingId = null; }
-            return;
-        }
-        if (!_attendancePollingId) {
-            refreshSessionAttendance();
-            _attendancePollingId = setInterval(refreshSessionAttendance, POLL_INTERVAL_MS);
-        }
-    }
-    document.addEventListener('visibilitychange', handlePollingVisibility);
     function startScannerClock() {
         stopScannerClock();
         _scannerClockId = setInterval(updateScannerClock, 1000);
@@ -2636,7 +2573,6 @@
      * INIT
      * ============================================================ */
     async function initializeApp() {
-        populateKelasSelects();
         checkBackendVersion();
         // 1) Pulihkan sesi dari penyimpanan lokal — TANPA menunggu jaringan.
         const saved = loadAppState();
@@ -2675,39 +2611,22 @@
         if (CONFIG.DEBUG) console.log('[initializeApp]', { apiConfigured: isApiConfigured(), appState: appState });
     }
 
-    // Logout otomatis HANYA bila server menolak akun (STUDENT_NOT_FOUND / STUDENT_INACTIVE).
-    // networkError / error server lain → sesi tetap dipertahankan.
+    // Logout HANYA terjadi lewat tombol "Keluar Akun" (handleLogout).
     async function syncStudentInBackground() {
         if (!appState.student || !appState.student.npm) return;
-        const npm = appState.student.npm;
-        const res = await apiRequest('getStudent', { npm: npm });
-        // Pengguna sudah keluar / berganti akun selama menunggu respons → abaikan.
-        if (!appState.student || appState.student.npm !== npm) return;
-
+        const res = await apiRequest('getStudent', { npm: appState.student.npm });
         if (res.success && res.data) {
-            const before = appState.student;
-            const next = {
+            saveStudent({
                 npm: String(res.data.npm), nama: String(res.data.nama || ''),
                 semester: res.data.semester, kelas: String(res.data.kelas || ''),
                 status: String(res.data.status || 'Aktif')
-            };
-            const classChanged = String(before.kelas) !== String(next.kelas) || String(before.semester) !== String(next.semester);
-            saveStudent(next);
-            if (classChanged) {
-                // Jadwal lama milik kelas sebelumnya — kosongkan agar tidak tampil salah bila muat ulang gagal.
-                appState.schedule = []; appState.nextClass = null;
-                showToast('info', 'Kelas Anda diperbarui menjadi ' + next.kelas);
-            }
+            });
             renderStudentHeader();
             renderProfileModal();
-        } else if (!res.networkError && res.data && res.data.code === 'STUDENT_INACTIVE') {
-            forceLogout('Akun Anda tidak aktif. Hubungi dosen/admin bila ini keliru.');
-            return;
-        } else if (!res.networkError && res.data && res.data.code === 'STUDENT_NOT_FOUND') {
-            forceLogout('Akun Anda tidak ditemukan di server. Silakan masuk kembali dengan NPM Anda.');
-            return;
+        } else if (!res.networkError && res.data && (res.data.code === 'STUDENT_NOT_FOUND' || res.data.code === 'STUDENT_INACTIVE')) {
+            showToast('info', 'Akun tidak terdaftar/aktif di server. Sesi tetap dipertahankan; hubungi admin bila ini keliru.');
         }
-        await refreshStudentData();   // jadwal dimuat ulang dengan kelas/semester terbaru
+        await refreshStudentData();
         if (appState.student) {
             renderStudentDashboard();
             renderAttendanceHistory();

@@ -34,8 +34,7 @@ Dibangun **100% tanpa framework backend** — hanya memanfaatkan GitHub Pages se
 
 | Fitur | Deskripsi |
 |---|---|
-| 🔐 **Login NPM** | Identifikasi berdasarkan NPM (6–20 digit angka, divalidasi sebelum memanggil server) |
-| 📝 **Daftar Mandiri** | NPM belum terdaftar → isi Nama + Kelas → langsung masuk (lihat [Daftar Mandiri](#-daftar-mandiri-self-registration)) |
+| 🔐 **Login NPM** | Identifikasi berdasarkan NPM dari database |
 | 📊 **Dashboard** | Ringkasan kehadiran (hadir/telat/alpha/persentase) |
 | 📱 **QR Saya** | QR pribadi `ATTENDANCE\|NPM` untuk discan dosen |
 | 📅 **Kalender** | Riwayat kehadiran dalam tampilan kalender + navigasi bulan |
@@ -63,9 +62,7 @@ Dibangun **100% tanpa framework backend** — hanya memanfaatkan GitHub Pages se
 - 🔒 **Anti-duplikat** via `LockService`
 - 🕐 **Server-side timestamp** (bukan waktu browser)
 - ✅ **Validasi ketat** — tidak percaya data dari frontend
-- 📝 **22 API action** (+ alias `ping`) dengan format respons konsisten
-- 🚦 **Rate limit pendaftaran mandiri** — maks 10 pendaftaran/menit (global)
-- ⚡ **Cache 60 detik** untuk lookup mahasiswa & daftar mata kuliah, pembacaan sheet per-kolom
+- 📝 **16 API endpoints** dengan format respons konsisten
 
 ---
 
@@ -124,8 +121,6 @@ Dibangun **100% tanpa framework backend** — hanya memanfaatkan GitHub Pages se
 digital-attendance/
 ├── index.html      # Aplikasi utama (HTML + CSS + JS)
 ├── README.md       # Dokumentasi ini
-├── CHANGELOG.md    # Riwayat versi
-├── tests/          # (opsional) test otomatis — lihat bagian Testing
 └── LICENSE         # (opsional) MIT License
 ```
 
@@ -166,8 +161,7 @@ Backend `Code.gs` **tidak di-upload ke repo** — dia hidup di Google Apps Scrip
 <details>
 <summary>Lihat header setiap sheet</summary>
 
-**Students** — `NPM | Nama | Semester | Kelas | Status | TerdaftarPada | Sumber`  
-*(dua kolom terakhir ditambah otomatis pada sheet lama; kosong untuk data yang diisi manual)*
+**Students** — `NPM | Nama | Semester | Kelas | Status`
 
 **Courses** — `CourseID | MataKuliah | Semester | Dosen`
 
@@ -223,14 +217,7 @@ MK-PWEB  | Pemrograman Web           | 5        |
 4. Klik **Deploy** → **Authorize** (Advanced → Go to unsafe → Allow)
 5. **Copy Web App URL** — format: `https://script.google.com/macros/s/AKfycb.../exec`
 
-#### 1.5 Memperbarui dari v2.2.0 ke v2.3.0
-
-1. Tempel `Code.gs` baru ke Apps Script (ganti seluruh isi, **pertahankan `SPREADSHEET_ID`** Anda).
-2. Jalankan `seedDatabase()` sekali (aman diulang) — memastikan kolom `TerdaftarPada` & `Sumber` ada dan terkunci sebagai teks. Tanpa langkah ini kolom tetap ditambah otomatis saat request pertama.
-3. **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy.** URL Web App tidak berubah.
-4. Upload `index.html` baru ke GitHub. Jika versi backend belum sesuai (`2.3.0`), frontend menampilkan banner merah di atas halaman.
-
-#### 1.6 Set Timezone
+#### 1.5 Set Timezone
 
 - Di spreadsheet: **File → Settings**
 - **Time zone**: `(GMT+07:00) Jakarta`
@@ -282,8 +269,6 @@ const CONFIG = {
 ```
 1. Buka URL GitHub Pages
 2. Masukkan NPM → Masuk (login **bertahan** setelah refresh / tutup tab, sampai menekan "Keluar Akun")
-   - NPM belum terdaftar → form **Daftar Mandiri** (Nama + Kelas) → langsung masuk
-   - Jika kemudian akun dinonaktifkan atau dihapus dari sheet, sesi otomatis berakhir dengan pesan jelas; gangguan internet **tidak** pernah memicu logout
 3. Dashboard tampil dengan ringkasan kehadiran
 4. Buka tab "QR Saya" → QR tampil
 5. Tunjukkan QR ke dosen untuk discan
@@ -302,20 +287,6 @@ const CONFIG = {
 8. Klik "Akhiri Sesi" setelah selesai
 9. Export rekap jika diperlukan
 ```
-
-### 📝 Daftar Mandiri (self-registration)
-
-Mahasiswa yang NPM-nya belum ada di sheet `Students` dapat mendaftar sendiri:
-
-```
-Masukkan NPM → "NPM belum terdaftar" → isi Nama Lengkap + Kelas (5_1–5_5) → Daftar & Masuk
-```
-
-- Backend (`registerStudent`) menambah baris baru di `Students`: `Status = Aktif`, `Semester` diturunkan dari kelas (`5_1` → 5), `TerdaftarPada` = waktu server (Asia/Jakarta), `Sumber = Mandiri`.
-- Baris yang diisi **manual** di Sheets dibiarkan kosong pada kedua kolom itu — dosen dapat memfilter `Sumber = Mandiri` untuk memeriksa pendaftar baru.
-- **Ringkasan kehadiran pendaftar baru:** sesi `ENDED` yang *dimulai sebelum* `TerdaftarPada` tidak dihitung (tidak jadi alpha). Sesi yang sudah dihadiri tetap dihitung. Mahasiswa lama (kolom kosong) tidak berubah.
-- **Rate limit:** maksimal **10 pendaftaran per menit** untuk seluruh pengguna; selebihnya ditolak `RATE_LIMITED` dan bisa dicoba lagi semenit kemudian.
-- NPM sudah ada → `STUDENT_EXISTS` (frontend menyarankan menekan Masuk lagi).
 
 ### Kelola Jadwal (Dosen)
 
@@ -337,10 +308,7 @@ Validasi (di frontend **dan** backend): mata kuliah harus terdaftar, hari valid 
 | # | Aksi | Expected |
 |---|---|---|
 | 1 | Login NPM valid | Masuk dashboard dengan data benar |
-| 2a | Login dengan NPM **belum terdaftar** (format valid, mis. `9999999`) | Membuka form **Daftar Mandiri** — *bukan* toast "Mahasiswa tidak ditemukan" seperti versi lama |
-| 2b | Login dengan NPM berformat salah (huruf, <6 atau >20 digit) | Toast validasi, **tanpa** memanggil server |
-| 2c | Isi form Daftar Mandiri | Masuk dashboard; sheet `Students` dapat baris baru dengan `TerdaftarPada` & `Sumber = Mandiri` |
-| 2d | Daftar 11 kali dalam satu menit | Pendaftaran ke-11 ditolak (`RATE_LIMITED`) |
+| 2 | Login NPM invalid | Toast "Mahasiswa tidak ditemukan" |
 | 3 | Buat sesi sebagai dosen | Sesi aktif, scanner terbuka |
 | 4 | Scan QR mahasiswa | Toast hijau + row baru di sheet `Attendance` |
 | 5 | Scan QR yang sama lagi | Ditolak "sudah melakukan absensi" |
@@ -348,19 +316,8 @@ Validasi (di frontend **dan** backend): mata kuliah harus terdaftar, hari valid 
 | 7 | Export CSV | File terunduh |
 | 8 | Refresh / tutup-buka tab setelah login | Tetap login, dashboard langsung tampil |
 | 9 | Matikan internet lalu buka ulang | Tetap login (data cache), tidak logout |
-| 9b | Ubah `Status` mahasiswa jadi `Nonaktif` di Sheets, tunggu >60 detik, buka ulang app | Otomatis keluar dengan pesan "akun tidak aktif" |
 | 10 | Kelola Jadwal: tambah, ubah, hapus | Sheet `Schedules` ikut berubah |
 | 11 | Ketik `5.1` manual di kolom Kelas lalu jalankan `seedDatabase()` | Berubah jadi teks `5_1` |
-
-### Test Otomatis (Node.js, tanpa dependency)
-
-Dari folder proyek (`code.gs` dan `backup/code.v2.2.0.gs` harus ada di tempatnya):
-
-```bash
-node tests/backend.test.js        # backend: Code.gs dimuat ke vm dengan mock Sheets/Cache/Lock
-node tests/frontend.logic.test.js # logika frontend (validasi NPM, session recovery, polling, daftar kelas)
-node tests/frontend.check.js      # node --check pada <script> inline index.html
-```
 
 ### Test Lengkap
 
@@ -387,14 +344,11 @@ Lihat dokumentasi `PHASE 7 — Production Testing` untuk checklist lengkap 22+ i
 - ✅ `LockService` mencegah race condition
 - ✅ Timestamp dari server, bukan browser
 - ✅ Validasi waktu sesi di backend (bukan bisa dipalsukan)
-- ✅ Rate limit pendaftaran mandiri (10/menit, global) + validasi format NPM di frontend **dan** backend
 
 ### Yang **BUKAN** Perlindungan ❌
 
 - ❌ **Bukan autentikasi** — NPM-only, siapa tahu NPM bisa login
-- ❌ **Bukan biometric** — **QR masih statis** (`ATTENDANCE|NPM`); screenshot bisa dipakai orang lain
-- ❌ **Tidak ada PIN / autentikasi dosen** — siapa pun yang tahu URL dapat memanggil endpoint dosen
-- ❌ **Daftar mandiri tidak memverifikasi identitas** — siapa pun bisa mendaftarkan NPM yang belum terpakai dengan nama apa saja; rate limit hanya meredam spam, bukan mencegah pemalsuan. Gunakan kolom `Sumber` untuk meninjau pendaftar baru
+- ❌ **Bukan biometric** — QR statis, screenshot bisa dipakai orang lain
 - ❌ **Bukan otorisasi role** — endpoint dosen dapat dipanggil siapa pun yang tahu URL
 - ❌ **Bukan enkripsi end-to-end** — data via HTTPS tapi Google Sheets tetap plaintext
 
@@ -409,8 +363,7 @@ Lihat dokumentasi `PHASE 7 — Production Testing` untuk checklist lengkap 22+ i
 | Keterbatasan | Detail |
 |---|---|
 | 🔔 **Notification** | Hanya jalan saat tab browser terbuka. Tidak ada Service Worker / PWA. |
-| 📡 **Realtime** | Pakai **polling** 5 detik (berhenti otomatis saat tab tersembunyi, lanjut saat terlihat lagi), bukan WebSocket. |
-| 🗄️ **Cache** | Lookup mahasiswa & daftar mata kuliah di-cache **60 detik** (`CacheService`). Perubahan **manual** di Google Sheets (mis. mengubah `Status`, `Kelas`, atau mata kuliah) bisa tertunda **≤ 60 detik**. Penulisan lewat aplikasi (mis. pendaftaran) langsung menginvalidasi cache. |
+| 📡 **Realtime** | Pakai **polling** 3 detik, bukan WebSocket. |
 | 🌐 **CORS** | Memakai `Content-Type: text/plain` untuk menghindari preflight. |
 | ⏱ **Quota Apps Script** | ~20.000 request/minggu, ~90 menit execution/hari (akun gratis). |
 | 📱 **LocalStorage** | Per browser, per device. Pindah device = login ulang. Sesi hanya berakhir lewat tombol **Keluar Akun** atau jika data browser dihapus. |
@@ -488,21 +441,6 @@ Lihat dokumentasi `PHASE 7 — Production Testing` untuk checklist lengkap 22+ i
 </details>
 
 <details>
-<summary><b>Banner merah "Backend Apps Script belum versi terbaru"</b></summary>
-
-- Tempel `Code.gs` terbaru, lalu **Deploy → Manage deployments → Edit → Version: New version**
-- Menyimpan kode saja tidak cukup; Web App tetap menjalankan versi deploy lama
-
-</details>
-
-<details>
-<summary><b>Pendaftaran ditolak "Terlalu banyak pendaftaran" (RATE_LIMITED)</b></summary>
-
-- Batas 10 pendaftaran/menit berlaku untuk **semua** pengguna sekaligus; coba lagi setelah ±1 menit
-
-</details>
-
-<details>
 <summary><b>Export Excel gagal</b></summary>
 
 - CDN SheetJS mungkin tidak termuat
@@ -526,8 +464,6 @@ Lihat dokumentasi `PHASE 7 — Production Testing` untuk checklist lengkap 22+ i
 | Semester | Number | Semester aktif |
 | Kelas | String | `5_1` … `5_5` |
 | Status | String | `Aktif` / `Nonaktif` |
-| TerdaftarPada | Timestamp (teks) | `yyyy-MM-dd HH:mm:ss` Asia/Jakarta; diisi saat daftar mandiri, kosong untuk data manual |
-| Sumber | String | `Mandiri` untuk daftar mandiri; kosong untuk data manual |
 
 ### Courses
 | Kolom | Tipe | Keterangan |
@@ -611,9 +547,7 @@ Response selalu:
 
 | Action | Data | Deskripsi |
 |---|---|---|
-| `ping` / `getVersion` | — | Cek backend & versi (`2.3.0`) |
 | `getStudent` | `{ npm }` | Ambil data mahasiswa |
-| `registerStudent` | `{ npm, nama, kelas }` | Daftar mandiri (rate limit 10/menit) |
 | `getCourses` | `{ semester? }` | Daftar mata kuliah |
 | `getSchedules` | `{ semester, kelas }` | Jadwal per kelas (tampilan mahasiswa) |
 | `getAllSchedules` | `{ kelas?, courseId?, hari? }` | Semua jadwal untuk Kelola Jadwal (terurut hari & jam) |
@@ -636,20 +570,7 @@ Response selalu:
 
 </details>
 
-**Catatan respons error.** Penolakan tertentu menyertakan `data.code` sehingga frontend dapat membedakan "ditolak server" dari "gagal koneksi". Kegagalan jaringan/timeout ditandai di sisi frontend dengan `networkError: true` dan tidak pernah memicu logout.
-
-| Kode | Arti |
-|---|---|
-| `STUDENT_NOT_FOUND` | NPM tidak ada di `Students` (saat login → tawarkan daftar; saat sinkron di latar belakang → logout) |
-| `STUDENT_INACTIVE` | Status bukan `Aktif` (saat sinkron di latar belakang → logout) |
-| `STUDENT_EXISTS` | `registerStudent` dengan NPM yang sudah terdaftar |
-| `INVALID_NPM` | `registerStudent` dengan NPM bukan 6–20 digit angka |
-| `RATE_LIMITED` | Lebih dari 10 pendaftaran dalam satu menit |
-| `SESSION_NOT_FOUND` | Sesi tidak ditemukan (`getSessionById`, `recordAttendance`) |
-| `SESSION_NOT_ACTIVE` / `SESSION_OUT_OF_TIME` | `recordAttendance`: sesi tidak aktif / di luar jam sesi |
-| `CLASS_MISMATCH` / `ALREADY_ATTENDED` | `recordAttendance`: kelas tidak cocok / sudah absen di sesi ini |
-
-Penolakan lain (validasi input, `createSession`, jadwal, dst.) tetap berupa `success: false` dengan pesan teks tanpa kode.
+**Catatan respons error.** Penolakan tertentu menyertakan `data.code` (mis. `STUDENT_NOT_FOUND`, `STUDENT_INACTIVE`, `SESSION_NOT_FOUND`) sehingga frontend dapat membedakan "ditolak server" dari "gagal koneksi". Kegagalan jaringan/timeout ditandai di sisi frontend dengan `networkError: true` dan tidak pernah memicu logout.
 
 ---
 
