@@ -137,6 +137,18 @@
         .list-item { background: var(--card-bg); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .list-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
         .list-info p { font-size: 0.75rem; color: var(--text-muted); }
+        /* --- v2.4.0: setup kelas & semester --- */
+        .setup-banner { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; border-radius: 12px; padding: 12px 14px; font-size: 0.82rem; line-height: 1.45; text-align: left; margin-top: 16px; }
+        .setup-banner .btn { margin-top: 10px; }
+        .link-btn { background: none; border: none; color: var(--primary); font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-top: 16px; padding: 6px 10px; }
+        .link-btn:hover { text-decoration: underline; }
+        .cfg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+        .cfg-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 12px; border-radius: 20px; background: var(--primary-light); color: var(--primary); font-size: 0.85rem; font-weight: 600; }
+        .cfg-chip small { font-weight: 500; color: var(--text-muted); }
+        .cfg-chip.off { background: #F1F5F9; color: var(--text-muted); text-decoration: line-through; }
+        .cfg-chip.new { background: #DCFCE7; color: #166534; }
+        .cfg-chip button { border: none; background: rgba(255,255,255,0.7); color: inherit; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.7rem; }
+        .cfg-chip button:hover { background: #fff; }
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
         .empty-state i { font-size: 3rem; color: #E2E8F0; margin-bottom: 12px; }
 
@@ -232,6 +244,13 @@
                 </div>
                 <button type="submit" class="btn btn-primary mt-2" id="btn-login">Masuk ke Dashboard</button>
             </form>
+
+            <div id="setup-banner" class="setup-banner hidden">
+                <b><i class="fas fa-exclamation-triangle"></i> Sistem belum disiapkan.</b><br>
+                Dosen perlu mengatur kelas &amp; semester dulu agar mahasiswa baru bisa mendaftar.
+                <button type="button" class="btn btn-primary btn-sm" onclick="openSetupManager()"><i class="fas fa-sliders-h"></i> Setup Awal (Dosen)</button>
+            </div>
+            <button type="button" class="link-btn" id="btn-open-config" onclick="openSetupManager()"><i class="fas fa-sliders-h"></i> Pengaturan Kelas &amp; Semester (Dosen)</button>
         </div>
     </div>
 
@@ -350,17 +369,15 @@
                 <form id="lecturer-setup-form" onsubmit="handleLecturerSetup(event)">
                     <div class="input-group">
                         <label>Mata Kuliah</label>
-                        <select id="lecturer-course" class="input-control" required onchange="onLecturerCourseChange()">
+                        <select id="lecturer-course" class="input-control" required>
                             <option value="">Memuat…</option>
                         </select>
+                        <p class="text-muted" id="lecturer-course-hint" style="font-size:0.78rem; margin-top:6px;"></p>
                     </div>
                     <div class="flex gap-1">
                         <div class="input-group" style="flex:1;">
                             <label>Semester</label>
-                            <select id="lecturer-semester" class="input-control" required>
-                                <option value="4">4</option>
-                                <option value="5" selected>5</option>
-                                <option value="6">6</option>
+                            <select id="lecturer-semester" class="input-control" required onchange="onLecturerSemesterChange()">
                             </select>
                         </div>
                         <div class="input-group" style="flex:1;">
@@ -394,6 +411,86 @@
             </div>
             <button class="btn btn-secondary" onclick="openScheduleManager()">
                 <i class="far fa-calendar-alt"></i> Kelola Jadwal
+            </button>
+            <button class="btn btn-secondary mt-1" onclick="openSetupManager()">
+                <i class="fas fa-sliders-h"></i> Pengaturan Kelas &amp; Semester
+            </button>
+        </div>
+    </div>
+
+    <!-- ============ LECTURER: SETUP AWAL / PENGATURAN KELAS & SEMESTER ============ -->
+    <div id="lecturer-config-view" class="view-container hidden">
+        <header class="lecturer-header">
+            <button class="btn-back" onclick="leaveSetupManager()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="font-bold" id="config-title">Setup Awal</h2>
+            <p style="font-size: 0.9rem; margin-top: 4px; opacity: 0.9;" id="config-subtitle">Atur kelas &amp; semester sekali, lalu mahasiswa tinggal memilih</p>
+        </header>
+        <div class="app-container" style="padding: 20px;">
+            <div class="ui-card">
+                <h3 class="font-bold mb-1">1. Identitas <span class="text-muted" style="font-weight:400; font-size:0.8rem;">(opsional)</span></h3>
+                <div class="input-group">
+                    <label>Program Studi</label>
+                    <input type="text" id="cfg-prodi" class="input-control" maxlength="60" placeholder="mis. Teknik Informatika" autocomplete="off">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>Tahun Ajaran / Periode</label>
+                    <input type="text" id="cfg-tahun" class="input-control" maxlength="20" placeholder="mis. 2026/2027 Ganjil" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <h3 class="font-bold mb-1">2. Kelas per Semester</h3>
+                <p class="text-muted mb-2" style="font-size:0.8rem;">Format kelas <b>semester_kode</b>, mis. <b>3_1</b> atau <b>5_A</b>. Semester 1–8. Kelas yang sudah dipakai tidak bisa dihapus, hanya dinonaktifkan.</p>
+                <div id="cfg-classes"><div class="empty-state"><i class="fas fa-layer-group"></i><p>Memuat…</p></div></div>
+                <div class="flex gap-1 mt-2">
+                    <div class="input-group" style="flex:1; margin-bottom:0;">
+                        <label>Semester</label>
+                        <select id="cfg-add-semester" class="input-control"></select>
+                    </div>
+                    <div class="input-group" style="flex:1; margin-bottom:0;">
+                        <label>Kode kelas</label>
+                        <input type="text" id="cfg-add-kode" class="input-control" maxlength="6" placeholder="1 atau A" autocomplete="off">
+                    </div>
+                    <button type="button" class="btn btn-primary" style="width:auto; align-self:flex-end;" onclick="addClassDraft()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="flex gap-1 mt-2 align-center">
+                    <span class="text-muted" style="font-size:0.8rem; flex:1;">Atau buat cepat untuk semester di atas:</span>
+                    <select id="cfg-add-count" class="input-control" style="width:auto; padding:8px 36px 8px 12px;">
+                        <option value="1">1 kelas</option><option value="2">2 kelas</option><option value="3">3 kelas</option>
+                        <option value="4">4 kelas</option><option value="5" selected>5 kelas</option><option value="6">6 kelas</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary btn-sm" style="width:auto;" onclick="quickAddClasses()">Buat</button>
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <h3 class="font-bold mb-1">3. Mata Kuliah <span class="text-muted" style="font-weight:400; font-size:0.8rem;">(bisa dilengkapi nanti)</span></h3>
+                <div id="cfg-courses"><div class="empty-state"><i class="fas fa-book"></i><p>Memuat…</p></div></div>
+                <div class="input-group mt-2">
+                    <label>Nama mata kuliah</label>
+                    <input type="text" id="cfg-course-name" class="input-control" maxlength="100" placeholder="mis. Basis Data" autocomplete="off">
+                </div>
+                <div class="flex gap-1">
+                    <div class="input-group" style="flex:1; margin-bottom:0;">
+                        <label>Semester</label>
+                        <select id="cfg-course-sem" class="input-control"></select>
+                    </div>
+                    <div class="input-group" style="flex:2; margin-bottom:0;">
+                        <label>Dosen <span class="text-muted" style="font-weight:400;">(opsional)</span></label>
+                        <input type="text" id="cfg-course-dosen" class="input-control" maxlength="100" autocomplete="off">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="addCourseCfg()"><i class="fas fa-plus"></i> Tambah Mata Kuliah</button>
+            </div>
+
+            <div class="ui-card">
+                <h3 class="font-bold mb-1">4. PIN Dosen <span class="text-muted" style="font-weight:400; font-size:0.8rem;">(opsional)</span></h3>
+                <p class="text-muted mb-2" style="font-size:0.8rem;" id="cfg-pin-note">Melindungi halaman pengaturan ini dari mahasiswa. Tidak melindungi sesi presensi &amp; jadwal.</p>
+                <input type="password" id="cfg-pin" class="input-control" maxlength="12" placeholder="PIN baru, 4–12 huruf/angka" autocomplete="new-password">
+            </div>
+
+            <button type="button" id="btn-save-config" class="btn btn-primary" style="font-size:1.05rem; padding:16px;" onclick="saveSetupConfig()">
+                <i class="fas fa-check"></i> Simpan &amp; Selesai
             </button>
         </div>
     </div>
@@ -660,6 +757,9 @@
                 <p class="text-primary font-bold" id="profile-course">-</p>
                 <p class="text-muted text-sm" id="profile-meta">-</p>
             </div>
+            <button class="btn btn-secondary mb-1" onclick="openClassModal()">
+                <i class="fas fa-exchange-alt"></i> Ubah Kelas / Semester
+            </button>
             <button class="btn btn-outline-danger" style="width: 100%;" onclick="closeModal('profile-modal'); openModal('logout-modal');">
                 <i class="fas fa-sign-out-alt"></i> Keluar Akun
             </button>
@@ -683,15 +783,68 @@
                     <label>Nama Lengkap</label>
                     <input type="text" id="reg-nama" class="input-control" maxlength="100" placeholder="Sesuai data kampus" required autocomplete="off">
                 </div>
-                <div class="input-group mb-3">
-                    <label>Kelas</label>
-                    <select id="reg-kelas" class="input-control" required>
-                        <option value="">Pilih kelas</option>
-                    </select>
+                <div class="flex gap-1">
+                    <div class="input-group mb-3" style="flex:1;">
+                        <label>Semester</label>
+                        <select id="reg-semester" class="input-control" required onchange="onSemesterPairChange('reg-semester','reg-kelas')">
+                            <option value="">Pilih</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-3" style="flex:1;">
+                        <label>Kelas</label>
+                        <select id="reg-kelas" class="input-control" required>
+                            <option value="">Pilih kelas</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex gap-1">
                     <button type="button" class="btn btn-outline-muted" onclick="closeModal('register-modal')" style="flex:1;">Batal</button>
                     <button type="submit" id="btn-register" class="btn btn-primary" style="flex:1;">Daftar &amp; Masuk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="class-modal">
+        <div class="modal-card" style="text-align:left;">
+            <div style="text-align:center;">
+                <i class="fas fa-exchange-alt text-primary" style="font-size: 3rem; margin-bottom: 16px;"></i>
+                <h3 class="font-bold mb-1">Pilih Semester &amp; Kelas</h3>
+                <p class="text-muted mb-3" style="font-size:0.85rem;" id="class-modal-note">Perbarui bila kamu naik semester atau salah pilih kelas.</p>
+            </div>
+            <form id="class-form" onsubmit="handleSaveClass(event)">
+                <div class="flex gap-1">
+                    <div class="input-group mb-3" style="flex:1;">
+                        <label>Semester</label>
+                        <select id="cls-semester" class="input-control" required onchange="onSemesterPairChange('cls-semester','cls-kelas')">
+                            <option value="">Pilih</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-3" style="flex:1;">
+                        <label>Kelas</label>
+                        <select id="cls-kelas" class="input-control" required>
+                            <option value="">Pilih kelas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-1">
+                    <button type="button" class="btn btn-outline-muted" onclick="closeModal('class-modal')" style="flex:1;">Nanti</button>
+                    <button type="submit" id="btn-save-class" class="btn btn-primary" style="flex:1;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pin-modal">
+        <div class="modal-card">
+            <i class="fas fa-lock text-primary" style="font-size: 3rem; margin-bottom: 16px;"></i>
+            <h3 class="font-bold mb-1">PIN Dosen</h3>
+            <p class="text-muted mb-3" style="font-size:0.85rem;">Masukkan PIN untuk mengubah pengaturan.</p>
+            <form onsubmit="submitPin(event)">
+                <input type="password" id="pin-input" class="input-control mb-2" maxlength="12" autocomplete="off" required>
+                <div class="flex gap-1">
+                    <button type="button" class="btn btn-outline-muted" onclick="cancelPin()" style="flex:1;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;">OK</button>
                 </div>
             </form>
         </div>
@@ -774,7 +927,7 @@
            LECTURER: END SESSION & RECAP → EXPORT → LECTURER: SESSION RECOVERY → INIT
 
          Titik sambung penting
-           CONFIG.API_URL / CONFIG.KELAS_LIST (satu-satunya daftar kelas; harus sama dengan CLASS_LIST di Code.gs)
+           CONFIG.API_URL / CONFIG.KELAS_LIST (daftar kelas dinamis, diisi dari sheet Classes lewat getSetupStatus)
            EXPECTED_BACKEND_VERSION (harus sama dengan APP_VERSION di Code.gs)
            isValidNpm (aturan NPM yang sama dengan backend)
            populateKelasSelects (dipanggil dari initializeApp)
@@ -791,13 +944,15 @@
         SPREADSHEET_URL: '',
         API_URL: 'https://script.google.com/macros/s/AKfycbwjBmMVuxa5dFErGSo_nlqGmFfQ8GzWAXCVhJUcjKqzKo0Okusf7_MFnClO_KouKhSk/exec', // ← GANTI dengan URL Web App Apps Script Anda
         STORAGE_KEY: 'digital_attendance_state',
+        SETUP_KEY: 'digital_attendance_setup',          // cache daftar kelas/semester dari server
+        LECTURER_PREFS_KEY: 'digital_attendance_lecturer_prefs',   // semester & kelas terakhir dosen
         STUDENT_KEY: 'digital_attendance_student',
         SESSION_KEY: 'digital_attendance_session',
         NOTIF_KEY: 'digital_attendance_notif_opt_in',
         REQUEST_TIMEOUT_MS: 25000,
         // Satu-satunya sumber daftar kelas di frontend (dipakai semua <select> lewat populateKelasSelects).
-        // Harus sama dengan CLASS_LIST di Code.gs.
-        KELAS_LIST: ['5_1', '5_2', '5_3', '5_4', '5_5'],
+        // v2.4.0: TIDAK di-hardcode — diisi dari server (sheet Classes) lewat applySetupStatus().
+        KELAS_LIST: [],
         DEBUG: false
     };
     const SCAN_COOLDOWN_MS = 3000;
@@ -824,6 +979,7 @@
                 historyFilter: 'semua'
             },
             schedule: [], reminders: [], nextClass: null,
+            setup: { loaded: false, setupDone: false, classes: [], semesters: [], prodi: '', tahunAjaran: '', hasPin: false },
             ui: { currentView: 'landing-view', currentTab: 'tab-dashboard', loading: false }
         };
     }
@@ -873,10 +1029,60 @@
     function isValidNpm(npm) {
         return /^\d{6,20}$/.test(String(npm === null || npm === undefined ? '' : npm));
     }
-    // Isi semua <select> kelas dari CONFIG.KELAS_LIST. Opsi placeholder (value kosong, mis. "Semua Kelas" / "Pilih kelas") dipertahankan.
-    // Select tanpa placeholder (form dosen) default ke kelas pertama.
+    // Semester diturunkan dari kelas: "5_A" → 5 (aturan sama dengan backend).
+    function semesterOfKelas(k) {
+        const n = Number(String(k || '').split('_')[0]);
+        return n >= 1 && n <= 8 ? n : 0;
+    }
+    function setupSemesters() { return (appState.setup && appState.setup.semesters ? appState.setup.semesters : []).slice(); }
+    function kelasForSemester(sem) {
+        return CONFIG.KELAS_LIST.filter(function (k) { return String(semesterOfKelas(k)) === String(sem); });
+    }
+    function selectPlaceholder(sel) {
+        return Array.prototype.find.call(sel.options, function (o) { return o.value === ''; }) || null;
+    }
+    // Isi <select> semester dari semester yang tersedia di server. Placeholder (value kosong) dipertahankan.
+    function fillSemesterSelect(id, selected) {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const prev = (selected !== undefined && selected !== null && selected !== '') ? String(selected) : sel.value;
+        const ph = selectPlaceholder(sel);
+        while (sel.firstChild) sel.removeChild(sel.firstChild);
+        if (ph) sel.appendChild(ph);
+        const sems = setupSemesters();
+        sems.forEach(function (n) {
+            const o = document.createElement('option');
+            o.value = String(n); o.textContent = String(n);
+            sel.appendChild(o);
+        });
+        if (prev && sems.map(String).indexOf(prev) !== -1) sel.value = prev;
+        else sel.value = ph ? '' : (sems.length ? String(sems[0]) : '');
+    }
+    // Isi <select> kelas untuk satu semester (tanpa semester + ada placeholder → kosong & nonaktif).
+    function fillKelasSelect(id, semester, selected) {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const ph = selectPlaceholder(sel);
+        while (sel.firstChild) sel.removeChild(sel.firstChild);
+        if (ph) sel.appendChild(ph);
+        const list = semester ? kelasForSemester(semester) : (ph ? [] : CONFIG.KELAS_LIST.slice());
+        list.forEach(function (k) {
+            const o = document.createElement('option');
+            o.value = k; o.textContent = k;
+            sel.appendChild(o);
+        });
+        sel.disabled = !!ph && !semester;
+        if (selected && list.indexOf(selected) !== -1) sel.value = selected;
+        else sel.value = ph ? '' : (list[0] || '');
+    }
+    function onSemesterPairChange(semId, kelasId) {
+        const sem = document.getElementById(semId);
+        fillKelasSelect(kelasId, sem ? sem.value : '');
+    }
+    // Isi semua <select> semester & kelas dari daftar dinamis (CONFIG.KELAS_LIST + appState.setup.semesters).
+    // Opsi placeholder (value kosong, mis. "Semua Kelas" / "Pilih kelas") dipertahankan.
     function populateKelasSelects() {
-        ['lecturer-kelas', 'sched-filter-kelas', 'sched-kelas', 'reg-kelas'].forEach(function (id) {
+        ['sched-filter-kelas', 'sched-kelas'].forEach(function (id) {
             const sel = document.getElementById(id);
             if (!sel) return;
             const prev = sel.value;
@@ -890,8 +1096,16 @@
                 sel.appendChild(o);
             });
             if (prev && CONFIG.KELAS_LIST.indexOf(prev) !== -1) sel.value = prev;
-            else sel.value = hasPlaceholder ? '' : CONFIG.KELAS_LIST[0];
+            else sel.value = hasPlaceholder ? '' : (CONFIG.KELAS_LIST[0] || '');
         });
+        [['lecturer-semester', 'lecturer-kelas'], ['reg-semester', 'reg-kelas'], ['cls-semester', 'cls-kelas']].forEach(function (pair) {
+            const kSel = document.getElementById(pair[1]);
+            const prevK = kSel ? kSel.value : '';
+            fillSemesterSelect(pair[0]);
+            const sSel = document.getElementById(pair[0]);
+            fillKelasSelect(pair[1], sSel ? sSel.value : '', prevK);
+        });
+        if (typeof renderLecturerCourseOptions === 'function') renderLecturerCourseOptions();
     }
     // Format kelas resmi: lihat CONFIG.KELAS_LIST. Nilai lama "5.1" ikut dinormalisasi.
     function normalizeKelasClient(v) {
@@ -1020,7 +1234,7 @@
     // Tambahan flag lokal `networkError: true` bila kegagalan berasal dari jaringan /
     // timeout / server tidak merespon — BUKAN penolakan bisnis dari backend.
     // Versi backend (Code.gs) yang diharapkan frontend ini.
-    const EXPECTED_BACKEND_VERSION = '2.3.0';
+    const EXPECTED_BACKEND_VERSION = '2.4.0';
     let _backendWarned = false;
     function showBackendOutdated(detail) {
         if (_backendWarned) return;
@@ -1217,7 +1431,10 @@
         if (el) el.classList.remove('active');
     }
     document.querySelectorAll('.modal-overlay').forEach(function (o) {
-        o.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('active'); });
+        o.addEventListener('click', function (e) {
+            if (e.target !== this) return;
+            if (this.id === 'pin-modal') cancelPin(); else this.classList.remove('active');
+        });
     });
 
     /* ============================================================
@@ -1510,12 +1727,13 @@
                     status: String(res.data.status || 'Aktif')
                 });
             } else {
-                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: CONFIG.KELAS_LIST[0], status: 'Aktif' });
+                saveStudent({ npm: npm, nama: 'Mahasiswa Demo', semester: 5, kelas: CONFIG.KELAS_LIST[0] || '5_1', status: 'Aktif' });
             }
             await refreshStudentData();
             renderApp();
             if (isNotifOptedIn()) startReminderChecker();
             showToast('success', 'Berhasil masuk');
+            ensureStudentClassValid();
         } catch (e) {
             handleApiError(e, 'Gagal masuk');
         } finally { setLoading(false); }
@@ -1524,19 +1742,31 @@
     /* ============================================================
      * STUDENT: DAFTAR MANDIRI (NPM belum terdaftar)
      * ============================================================ */
-    function openRegisterModal(npm) {
+    async function openRegisterModal(npm) {
+        // Daftar kelas berasal dari server (disiapkan dosen). Muat dulu bila belum ada.
+        if (isApiConfigured() && !appState.setup.loaded) await loadSetupStatus();
+        if (isApiConfigured() && !CONFIG.KELAS_LIST.length) {
+            showToast('error', 'Kelas & semester belum disiapkan. Minta dosen menjalankan Setup Awal terlebih dahulu.', 7000);
+            return;
+        }
         const n = document.getElementById('reg-npm'); if (n) n.value = npm;
         const nm = document.getElementById('reg-nama'); if (nm) nm.value = '';
-        const k = document.getElementById('reg-kelas'); if (k) k.value = '';
+        fillSemesterSelect('reg-semester', '');
+        const sems = setupSemesters();
+        const sSel = document.getElementById('reg-semester');
+        if (sSel && sems.length === 1) sSel.value = String(sems[0]);   // hanya satu semester → langsung terpilih
+        fillKelasSelect('reg-kelas', sSel ? sSel.value : '');
         openModal('register-modal');
     }
     async function handleRegisterStudent(event) {
         event.preventDefault();
         const npm = (document.getElementById('reg-npm').value || '').trim();
         const nama = (document.getElementById('reg-nama').value || '').replace(/\s+/g, ' ').trim();
+        const semester = document.getElementById('reg-semester').value;
         const kelas = document.getElementById('reg-kelas').value;
         if (!isValidNpm(npm)) { showToast('error', 'NPM harus berupa angka (6–20 digit)'); return; }
         if (nama.length < 3) { showToast('error', 'Nama wajib diisi (minimal 3 karakter)'); return; }
+        if (!semester) { showToast('error', 'Pilih semester'); return; }
         if (!kelas) { showToast('error', 'Pilih kelas'); return; }
         const btn = document.getElementById('btn-register');
         setButtonLoading(btn, true);
@@ -1549,6 +1779,7 @@
                     return;
                 }
                 showToast('error', res.message || 'Gagal mendaftar');
+                if (!res.networkError && /Kelas tidak valid/i.test(res.message || '')) loadSetupStatus();   // daftar kelas di perangkat usang
                 return;
             }
             saveStudent({
@@ -1577,6 +1808,7 @@
             selectedDate: null, historyFilter: 'semua'
         };
         appState.schedule = []; appState.reminders = []; appState.nextClass = null;
+        _classPromptShown = false;
         stopReminderChecker();
     }
     function handleLogout() {
@@ -1891,38 +2123,421 @@
     }
 
     /* ============================================================
+     * SETUP AWAL: KELAS, SEMESTER, MATA KULIAH, PIN (v2.4.0)
+     * ============================================================
+     * Daftar kelas/semester disimpan di sheet "Classes" dan disiapkan dosen sekali.
+     * Mahasiswa memilih dari daftar itu saat daftar / ubah kelas. */
+    let _dosenPin = '';            // hanya di memori; hilang saat tab ditutup
+    let _configDraft = [];         // kelas baru yang belum disimpan
+    let _configAdmin = null;       // hasil getSetupStatus {admin:true}
+    let _configCourses = [];
+    let _configReturnView = 'landing-view';
+    let _configWasDone = true;
+    let _pinResolver = null;
+    let _classPromptShown = false;
+
+    function applySetupStatus(st) {
+        st = st || {};
+        appState.setup = {
+            loaded: true, setupDone: !!st.setupDone,
+            classes: Array.isArray(st.classes) ? st.classes : [],
+            semesters: Array.isArray(st.semesters) ? st.semesters : [],
+            prodi: String(st.prodi || ''), tahunAjaran: String(st.tahunAjaran || ''), hasPin: !!st.hasPin
+        };
+        CONFIG.KELAS_LIST = appState.setup.classes.map(function (c) { return String(c.kelas); });
+        try { store.set(CONFIG.SETUP_KEY, JSON.stringify(appState.setup)); } catch (e) { /* abaikan */ }
+        populateKelasSelects();
+        renderSetupBanner();
+    }
+    function loadCachedSetup() {
+        try {
+            const raw = store.get(CONFIG.SETUP_KEY);
+            if (!raw) return;
+            const st = JSON.parse(raw);
+            if (st && Array.isArray(st.classes)) applySetupStatus(st);
+        } catch (e) { /* cache rusak → abaikan */ }
+    }
+    async function loadSetupStatus() {
+        if (!isApiConfigured()) return null;
+        const res = await apiRequest('getSetupStatus', {});
+        if (res.success && res.data) applySetupStatus(res.data);   // gagal jaringan → pakai cache
+        return res;
+    }
+    function renderSetupBanner() {
+        const needs = isApiConfigured() && appState.setup.loaded && !appState.setup.setupDone;
+        const banner = document.getElementById('setup-banner');
+        const link = document.getElementById('btn-open-config');
+        if (banner) banner.classList.toggle('hidden', !needs);
+        if (link) link.classList.toggle('hidden', needs);   // banner sudah punya tombol sendiri
+    }
+
+    /* --- PIN dosen (opsional; hanya melindungi aksi pengaturan) --- */
+    function requestPin() {
+        return new Promise(function (resolve) {
+            _pinResolver = resolve;
+            const i = document.getElementById('pin-input');
+            if (i) i.value = '';
+            openModal('pin-modal');
+            setTimeout(function () { if (i) i.focus(); }, 60);
+        });
+    }
+    function submitPin(event) {
+        event.preventDefault();
+        const i = document.getElementById('pin-input');
+        const v = i ? i.value.trim() : '';
+        closeModal('pin-modal');
+        const r = _pinResolver; _pinResolver = null;
+        if (r) r(v || null);
+    }
+    function cancelPin() {
+        closeModal('pin-modal');
+        const r = _pinResolver; _pinResolver = null;
+        if (r) r(null);
+    }
+    // Panggil aksi pengaturan; bila server minta PIN, tanyakan lalu ulangi (maks 3 kali).
+    async function callAdmin(action, data) {
+        let res = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (appState.setup.hasPin && !_dosenPin) {
+                const p = await requestPin();
+                if (!p) return { success: false, message: 'Dibatalkan', cancelled: true };
+                _dosenPin = p;
+            }
+            res = await apiRequest(action, Object.assign({}, data, { pin: _dosenPin }));
+            const code = !res.success && !res.networkError && res.data ? res.data.code : '';
+            if (code === 'PIN_REQUIRED' || code === 'PIN_INVALID') {
+                _dosenPin = ''; appState.setup.hasPin = true;
+                showToast('error', res.message);
+                continue;
+            }
+            return res;
+        }
+        return res;
+    }
+
+    /* --- Layar Setup Awal / Pengaturan --- */
+    function fixedSemesterOptions(id) {
+        const sel = document.getElementById(id);
+        if (!sel || sel.options.length) return;
+        for (let n = 1; n <= 8; n++) {
+            const o = document.createElement('option');
+            o.value = String(n); o.textContent = String(n);
+            sel.appendChild(o);
+        }
+    }
+    function updateConfigTitle() {
+        const done = appState.setup.setupDone;
+        const t = document.getElementById('config-title');
+        const sub = document.getElementById('config-subtitle');
+        const note = document.getElementById('cfg-pin-note');
+        if (t) t.textContent = done ? 'Pengaturan Kelas & Semester' : 'Setup Awal';
+        if (sub) sub.textContent = done ? 'Tambah kelas, semester, dan mata kuliah' : 'Atur kelas & semester sekali, lalu mahasiswa tinggal memilih';
+        if (note) note.textContent = appState.setup.hasPin
+            ? 'PIN sudah diatur. Isi kolom di bawah hanya jika ingin menggantinya.'
+            : 'Melindungi halaman pengaturan ini dari mahasiswa. Tidak melindungi sesi presensi & jadwal.';
+    }
+    async function openSetupManager() {
+        if (!isApiConfigured()) { showToast('error', 'API belum dikonfigurasi'); return; }
+        _configReturnView = appState.ui.currentView === 'lecturer-setup-view' ? 'lecturer-setup-view' : 'landing-view';
+        _configDraft = [];
+        _configWasDone = !!appState.setup.setupDone;
+        fixedSemesterOptions('cfg-add-semester');
+        fixedSemesterOptions('cfg-course-sem');
+        const pinEl = document.getElementById('cfg-pin'); if (pinEl) pinEl.value = '';
+        updateConfigTitle();
+        switchView('lecturer-config-view');
+        await refreshConfigData(true);
+    }
+    function leaveSetupManager() {
+        switchView(_configReturnView || 'landing-view');
+        if (_configReturnView === 'lecturer-setup-view') { initLecturerSetupForm(); loadCoursesIntoSetup(); }
+        renderSetupBanner();
+    }
+    async function refreshConfigData(fillInputs) {
+        const results = await Promise.all([apiRequest('getSetupStatus', { admin: true }), apiRequest('getCourses', {})]);
+        const st = results[0], co = results[1];
+        if (st.success && st.data) {
+            _configAdmin = st.data;
+            applySetupStatus(st.data);
+            if (fillInputs) {
+                const pr = document.getElementById('cfg-prodi'), th = document.getElementById('cfg-tahun');
+                if (pr) pr.value = st.data.prodi || '';
+                if (th) th.value = st.data.tahunAjaran || '';
+            }
+        } else showToast('error', st.message || 'Gagal memuat pengaturan');
+        if (co.success && Array.isArray(co.data)) _configCourses = co.data;
+        updateConfigTitle();
+        renderConfig();
+    }
+    function renderConfig() {
+        const box = document.getElementById('cfg-classes');
+        if (box) {
+            const all = (_configAdmin && _configAdmin.allClasses) ? _configAdmin.allClasses.slice() : [];
+            const known = {};
+            all.forEach(function (c) { known[c.kelas] = true; });
+            _configDraft.forEach(function (k) {
+                if (!known[k]) all.push({ kelas: k, semester: semesterOfKelas(k), aktif: true, mahasiswa: 0, draft: true });
+            });
+            if (!all.length) {
+                box.innerHTML = '<div class="empty-state" style="padding:20px;"><i class="fas fa-layer-group"></i><p>Belum ada kelas. Tambahkan di bawah.</p></div>';
+            } else {
+                const bySem = {};
+                all.forEach(function (c) { (bySem[c.semester] = bySem[c.semester] || []).push(c); });
+                box.innerHTML = Object.keys(bySem).map(Number).sort(function (a, b) { return a - b; }).map(function (sem) {
+                    const chips = bySem[sem].sort(function (a, b) { return a.kelas < b.kelas ? -1 : 1; }).map(function (c) {
+                        const k = escapeHtml(c.kelas);
+                        if (c.draft) {
+                            return '<span class="cfg-chip new">' + k + ' <small>baru</small>' +
+                                '<button type="button" title="Batal" onclick="removeDraft(\'' + k + '\')"><i class="fas fa-times"></i></button></span>';
+                        }
+                        return '<span class="cfg-chip' + (c.aktif ? '' : ' off') + '">' + k + ' <small>' + c.mahasiswa + ' mhs</small>' +
+                            '<button type="button" title="' + (c.aktif ? 'Nonaktifkan' : 'Aktifkan') + '" onclick="toggleClassCfg(\'' + k + '\', ' + (c.aktif ? 'false' : 'true') + ')"><i class="fas ' + (c.aktif ? 'fa-eye-slash' : 'fa-eye') + '"></i></button>' +
+                            '<button type="button" title="Hapus" onclick="deleteClassCfg(\'' + k + '\')"><i class="fas fa-trash"></i></button></span>';
+                    }).join('');
+                    return '<p class="font-semibold text-sm mb-1 mt-2">Semester ' + sem + '</p><div class="cfg-chips">' + chips + '</div>';
+                }).join('');
+            }
+        }
+        const cbox = document.getElementById('cfg-courses');
+        if (cbox) {
+            if (!_configCourses.length) {
+                cbox.innerHTML = '<div class="empty-state" style="padding:20px;"><i class="fas fa-book"></i><p>Belum ada mata kuliah.</p></div>';
+            } else {
+                const list = _configCourses.slice().sort(function (a, b) {
+                    return (Number(a.semester) - Number(b.semester)) || String(a.mataKuliah).localeCompare(String(b.mataKuliah));
+                });
+                cbox.innerHTML = list.map(function (c) {
+                    const id = escapeHtml(c.courseId);
+                    return '<div class="list-item"><div class="list-info"><h4>' + escapeHtml(c.mataKuliah) + '</h4>' +
+                        '<p>Semester ' + escapeHtml(c.semester) + (c.dosen ? ' • ' + escapeHtml(c.dosen) : '') + '</p></div>' +
+                        '<button type="button" class="icon-btn-sm" title="Hapus" onclick="deleteCourseCfg(\'' + id + '\')"><i class="fas fa-trash"></i></button></div>';
+                }).join('');
+            }
+        }
+    }
+    function knownKelas(k) {
+        if (_configDraft.indexOf(k) !== -1) return true;
+        return !!(_configAdmin && (_configAdmin.allClasses || []).some(function (c) { return c.kelas === k; }));
+    }
+    function addClassDraft() {
+        const sem = document.getElementById('cfg-add-semester').value;
+        const kodeEl = document.getElementById('cfg-add-kode');
+        const kode = String(kodeEl.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+        if (!kode) { showToast('error', 'Isi kode kelas (mis. 1 atau A)'); return; }
+        const k = sem + '_' + kode;
+        if (knownKelas(k)) { showToast('info', 'Kelas ' + k + ' sudah ada'); return; }
+        _configDraft.push(k);
+        kodeEl.value = '';
+        renderConfig();
+    }
+    function quickAddClasses() {
+        const sem = document.getElementById('cfg-add-semester').value;
+        const n = parseInt(document.getElementById('cfg-add-count').value, 10) || 1;
+        let added = 0;
+        for (let i = 1; i <= n; i++) {
+            const k = sem + '_' + i;
+            if (!knownKelas(k)) { _configDraft.push(k); added++; }
+        }
+        if (!added) showToast('info', 'Semua kelas itu sudah ada');
+        renderConfig();
+    }
+    function removeDraft(k) {
+        _configDraft = _configDraft.filter(function (x) { return x !== k; });
+        renderConfig();
+    }
+    async function toggleClassCfg(kelas, aktif) {
+        const res = await callAdmin('setClassStatus', { kelas: kelas, aktif: aktif });
+        if (res.cancelled) return;
+        if (!res.success) { showToast('error', res.message || 'Gagal mengubah kelas'); return; }
+        showToast('success', res.message);
+        await refreshConfigData(false);
+    }
+    async function deleteClassCfg(kelas) {
+        if (!window.confirm('Hapus kelas ' + kelas + '? (Hanya bisa bila belum dipakai)')) return;
+        const res = await callAdmin('deleteClass', { kelas: kelas });
+        if (res.cancelled) return;
+        if (!res.success) { showToast('error', res.message || 'Gagal menghapus kelas', 6000); return; }
+        showToast('success', res.message);
+        await refreshConfigData(false);
+    }
+    async function addCourseCfg() {
+        const nama = (document.getElementById('cfg-course-name').value || '').trim();
+        const sem = document.getElementById('cfg-course-sem').value;
+        const dosen = (document.getElementById('cfg-course-dosen').value || '').trim();
+        if (nama.length < 3) { showToast('error', 'Nama mata kuliah minimal 3 karakter'); return; }
+        const res = await callAdmin('createCourse', { mataKuliah: nama, semester: Number(sem), dosen: dosen });
+        if (res.cancelled) return;
+        if (!res.success) { showToast('error', res.message || 'Gagal menambah mata kuliah'); return; }
+        document.getElementById('cfg-course-name').value = '';
+        document.getElementById('cfg-course-dosen').value = '';
+        showToast('success', 'Mata kuliah ditambahkan');
+        await refreshConfigData(false);
+    }
+    async function deleteCourseCfg(courseId) {
+        if (!window.confirm('Hapus mata kuliah ini?')) return;
+        const res = await callAdmin('deleteCourse', { courseId: courseId });
+        if (res.cancelled) return;
+        if (!res.success) { showToast('error', res.message || 'Gagal menghapus mata kuliah', 6000); return; }
+        showToast('success', res.message);
+        await refreshConfigData(false);
+    }
+    async function saveSetupConfig() {
+        const btn = document.getElementById('btn-save-config');
+        const activeExisting = (_configAdmin && _configAdmin.allClasses) ? _configAdmin.allClasses.filter(function (c) { return c.aktif; }).length : 0;
+        if (!_configDraft.length && !activeExisting) { showToast('error', 'Tambahkan minimal satu kelas'); return; }
+        const pin = (document.getElementById('cfg-pin').value || '').trim();
+        if (pin && !/^[A-Za-z0-9]{4,12}$/.test(pin)) { showToast('error', 'PIN harus 4–12 huruf/angka'); return; }
+        setButtonLoading(btn, true);
+        try {
+            const payload = {
+                classes: _configDraft,
+                prodi: document.getElementById('cfg-prodi').value,
+                tahunAjaran: document.getElementById('cfg-tahun').value
+            };
+            if (pin) payload.newPin = pin;
+            const res = await callAdmin('saveSetup', payload);
+            if (res.cancelled) return;
+            if (!res.success) { showToast('error', res.message || 'Gagal menyimpan', 6000); return; }
+            _configAdmin = res.data;
+            applySetupStatus(res.data);
+            _configDraft = [];
+            if (pin) { _dosenPin = pin; document.getElementById('cfg-pin').value = ''; }
+            showToast('success', _configWasDone ? 'Pengaturan disimpan' : 'Setup selesai — mahasiswa kini bisa mendaftar', 5000);
+            leaveSetupManager();
+        } catch (e) {
+            handleApiError(e, 'Gagal menyimpan pengaturan');
+        } finally { setButtonLoading(btn, false); }
+    }
+
+    /* --- Dosen: ingat semester & kelas terakhir di perangkat ini --- */
+    function loadLecturerPrefs() {
+        try { return JSON.parse(store.get(CONFIG.LECTURER_PREFS_KEY) || 'null') || {}; } catch (e) { return {}; }
+    }
+    function saveLecturerPrefs(semester, kelas) {
+        try { store.set(CONFIG.LECTURER_PREFS_KEY, JSON.stringify({ semester: String(semester), kelas: String(kelas) })); } catch (e) { /* abaikan */ }
+    }
+
+    /* --- Mahasiswa: pilih / ubah semester & kelas --- */
+    function openClassModal(note) {
+        const s = appState.student;
+        if (!s) return;
+        if (!CONFIG.KELAS_LIST.length) { showToast('error', 'Daftar kelas belum disiapkan dosen'); return; }
+        closeModal('profile-modal');
+        const sem = semesterOfKelas(s.kelas) || '';
+        fillSemesterSelect('cls-semester', sem);
+        const sSel = document.getElementById('cls-semester');
+        fillKelasSelect('cls-kelas', sSel ? sSel.value : '', normalizeKelasClient(s.kelas));
+        const n = document.getElementById('class-modal-note');
+        if (n) n.textContent = (typeof note === 'string' && note) ? note : 'Perbarui bila kamu naik semester atau salah pilih kelas.';
+        openModal('class-modal');
+    }
+    async function handleSaveClass(event) {
+        event.preventDefault();
+        const s = appState.student;
+        if (!s) return;
+        const kelas = document.getElementById('cls-kelas').value;
+        if (!kelas) { showToast('error', 'Pilih kelas'); return; }
+        if (kelas === normalizeKelasClient(s.kelas)) { closeModal('class-modal'); return; }
+        const btn = document.getElementById('btn-save-class');
+        setButtonLoading(btn, true);
+        try {
+            const res = await apiRequest('updateStudentClass', { npm: s.npm, kelas: kelas });
+            if (!res.success) {
+                showToast('error', res.message || 'Gagal memperbarui kelas');
+                if (!res.networkError && /Kelas tidak valid/i.test(res.message || '')) loadSetupStatus();
+                return;
+            }
+            saveStudent(Object.assign({}, s, { semester: res.data.semester, kelas: String(res.data.kelas) }));
+            appState.schedule = []; appState.nextClass = null;   // jadwal lama milik kelas sebelumnya
+            closeModal('class-modal');
+            await refreshStudentData();
+            renderApp();
+            showToast('success', 'Kelas diperbarui ke ' + res.data.kelas);
+        } catch (e) {
+            handleApiError(e, 'Gagal memperbarui kelas');
+        } finally { setButtonLoading(btn, false); }
+    }
+    // Kelas mahasiswa tidak ada lagi di daftar (dihapus/dinonaktifkan dosen, atau data lama) → minta pilih ulang, sekali per sesi.
+    function ensureStudentClassValid() {
+        const s = appState.student;
+        if (!s || _classPromptShown || !appState.setup.loaded || !CONFIG.KELAS_LIST.length) return;
+        if (CONFIG.KELAS_LIST.indexOf(normalizeKelasClient(s.kelas)) !== -1) return;
+        _classPromptShown = true;
+        openClassModal('Kelas ' + (s.kelas || '-') + ' tidak ada di daftar kelas saat ini. Pilih semester & kelas yang sesuai.');
+    }
+
+    /* ============================================================
      * LECTURER: SETUP
      * ============================================================ */
-    function openLecturerSetup() {
+    async function openLecturerSetup() {
         const saved = loadLecturerSession();
         if (saved && saved.sessionId) { tryRecoverSession(saved); return; }
+        if (isApiConfigured()) {
+            if (!appState.setup.loaded) await loadSetupStatus();
+            // Pertama kali (belum ada kelas/semester) → arahkan ke Setup Awal.
+            if (appState.setup.loaded && !appState.setup.setupDone) {
+                showToast('info', 'Siapkan kelas & semester dulu (Setup Awal).');
+                openSetupManager();
+                return;
+            }
+        }
         const tglEl = document.getElementById('lecturer-tanggal');
         if (tglEl && !tglEl.value) tglEl.value = localISODate();
         switchView('lecturer-setup-view');
+        initLecturerSetupForm();
         loadCoursesIntoSetup();
     }
     function leaveLecturerSetup() { switchView('landing-view'); }
+
+    let _lecturerCoursesLoaded = false;
+    // Pulihkan semester & kelas terakhir yang dipakai dosen di perangkat ini.
+    function initLecturerSetupForm() {
+        const prefs = loadLecturerPrefs();
+        fillSemesterSelect('lecturer-semester', prefs.semester);
+        const sSel = document.getElementById('lecturer-semester');
+        fillKelasSelect('lecturer-kelas', sSel ? sSel.value : '', prefs.kelas);
+        renderLecturerCourseOptions();
+    }
+    function onLecturerSemesterChange() {
+        const sSel = document.getElementById('lecturer-semester');
+        fillKelasSelect('lecturer-kelas', sSel ? sSel.value : '');
+        renderLecturerCourseOptions();
+    }
+    // Mata kuliah difilter menurut semester yang dipilih.
+    function renderLecturerCourseOptions() {
+        const sel = document.getElementById('lecturer-course');
+        if (!sel || !_lecturerCoursesLoaded) return;
+        const semEl = document.getElementById('lecturer-semester');
+        const sem = semEl ? semEl.value : '';
+        const hint = document.getElementById('lecturer-course-hint');
+        const all = appState.lecturer.courses || [];
+        const list = all.filter(function (c) { return !sem || String(c.semester) === String(sem); });
+        const prev = sel.value;
+        if (!list.length) {
+            sel.innerHTML = '<option value="">' + (all.length ? 'Belum ada mata kuliah semester ' + escapeHtml(sem) : 'Belum ada mata kuliah') + '</option>';
+            if (hint) hint.innerHTML = 'Tambahkan di <a href="#" onclick="openSetupManager(); return false;" style="color:var(--primary);">Pengaturan Kelas &amp; Semester</a>.';
+            return;
+        }
+        sel.innerHTML = '<option value="">Pilih mata kuliah</option>' + list.map(function (c) {
+            return '<option value="' + escapeHtml(c.courseId) + '">' + escapeHtml(c.mataKuliah) + '</option>';
+        }).join('');
+        if (prev && list.some(function (c) { return c.courseId === prev; })) sel.value = prev;
+        if (hint) hint.textContent = '';
+    }
     async function loadCoursesIntoSetup() {
         const sel = document.getElementById('lecturer-course');
         if (!sel) return;
         if (!isApiConfigured()) { sel.innerHTML = '<option value="">API belum dikonfigurasi</option>'; return; }
+        _lecturerCoursesLoaded = false;
         sel.innerHTML = '<option value="">Memuat…</option>';
         try {
             const res = await apiRequest('getCourses', {});
             if (res.success && Array.isArray(res.data)) {
-                if (!res.data.length) { sel.innerHTML = '<option value="">Belum ada mata kuliah</option>'; return; }
-                sel.innerHTML = '<option value="">Pilih mata kuliah</option>' + res.data.map(function (c) {
-                    return '<option value="' + escapeHtml(c.courseId) + '" data-semester="' + escapeHtml(c.semester) + '">' + escapeHtml(c.mataKuliah) + '</option>';
-                }).join('');
+                appState.lecturer.courses = res.data;
+                _lecturerCoursesLoaded = true;
+                renderLecturerCourseOptions();
             } else { sel.innerHTML = '<option value="">Gagal memuat</option>'; }
         } catch (e) { sel.innerHTML = '<option value="">Error</option>'; }
-    }
-    function onLecturerCourseChange() {
-        const sel = document.getElementById('lecturer-course');
-        const sem = document.getElementById('lecturer-semester');
-        if (!sel || !sem) return;
-        const opt = sel.options[sel.selectedIndex];
-        if (opt && opt.dataset && opt.dataset.semester) sem.value = opt.dataset.semester;
     }
     async function handleLecturerSetup(event) {
         event.preventDefault();
@@ -1934,6 +2549,7 @@
         const jamMulai = document.getElementById('lecturer-jam-mulai').value;
         const jamSelesai = document.getElementById('lecturer-jam-selesai').value;
         if (!courseId) { showToast('error', 'Pilih mata kuliah'); return; }
+        if (!semester || !kelas) { showToast('error', 'Pilih semester dan kelas'); return; }
         if (!pertemuan || pertemuan < 1) { showToast('error', 'Pertemuan tidak valid'); return; }
         if (!tanggal) { showToast('error', 'Tanggal wajib diisi'); return; }
         if (!jamMulai || !jamSelesai) { showToast('error', 'Jam wajib diisi'); return; }
@@ -1952,6 +2568,7 @@
             const courseName = opt ? opt.textContent : courseId;
             appState.lecturer.session = Object.assign({}, res.data, { courseName: courseName });
             saveLecturerSession();
+            saveLecturerPrefs(semester, kelas);
             if (!isNotifOptedIn() && typeof Notification !== 'undefined' && Notification.permission === 'default') {
                 ensureNotificationPermission().then(function (granted) {
                     if (granted) { setNotifOptedIn(true); startReminderChecker(); }
@@ -2055,11 +2672,11 @@
         const editing = scheduleId ? (appState.lecturer.schedules || []).find(function (x) { return x.scheduleId === scheduleId; }) : null;
         if (scheduleId && !editing) { showToast('error', 'Jadwal tidak ditemukan'); return; }
         const hasCourses = populateScheduleCourseSelect(editing ? editing.courseId : '');
-        if (!hasCourses) { showToast('error', 'Belum ada mata kuliah. Jalankan seedDatabase() di Apps Script.'); return; }
+        if (!hasCourses) { showToast('error', 'Belum ada mata kuliah. Tambahkan di Pengaturan Kelas & Semester.'); return; }
         const filterEl = el('sched-filter-kelas');
         el('schedule-form-title').textContent = editing ? 'Ubah Jadwal' : 'Tambah Jadwal';
         el('sched-id').value = editing ? editing.scheduleId : '';
-        el('sched-kelas').value = editing ? editing.kelas : ((filterEl && filterEl.value) || CONFIG.KELAS_LIST[0]);
+        el('sched-kelas').value = editing ? editing.kelas : ((filterEl && filterEl.value) || CONFIG.KELAS_LIST[0] || '');
         el('sched-hari').value = editing ? editing.hari : 'Senin';
         el('sched-jam-mulai').value = editing ? editing.jamMulai : '08:00';
         el('sched-jam-selesai').value = editing ? editing.jamSelesai : '09:40';
@@ -2636,6 +3253,9 @@
      * INIT
      * ============================================================ */
     async function initializeApp() {
+        // Daftar kelas/semester: pakai cache terakhir dulu (instan, juga saat offline), lalu segarkan dari server.
+        if (isApiConfigured()) loadCachedSetup();
+        else applySetupStatus({ setupDone: true, classes: [{ kelas: '5_1', semester: 5 }, { kelas: '5_2', semester: 5 }], semesters: [5] });   // mode demo
         populateKelasSelects();
         checkBackendVersion();
         // 1) Pulihkan sesi dari penyimpanan lokal — TANPA menunggu jaringan.
@@ -2667,6 +3287,7 @@
         // 2) Tampilkan UI langsung dari cache.
         renderApp();
         if (isNotifOptedIn() && appState.student) startReminderChecker();
+        if (isApiConfigured()) loadSetupStatus().then(function () { ensureStudentClassValid(); });
 
         // 3) Sinkronisasi di latar belakang. Kegagalan jaringan TIDAK pernah logout.
         if (appState.student && appState.student.npm && isApiConfigured()) {
@@ -2715,6 +3336,7 @@
             renderReminders();
             renderSchedule();
         }
+        ensureStudentClassValid();
     }
 
     // Segarkan data saat koneksi kembali / tab dibuka lagi (senyap, tanpa logout).

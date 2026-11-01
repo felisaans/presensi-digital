@@ -2,6 +2,27 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/). Riwayat sebelum 2.2.0 tidak dicatat di sini.
 
+## [2.4.0]
+
+### Ditambahkan
+- **Setup Awal kelas & semester** untuk dosen (wizard saat pertama kali, bisa dibuka lagi lewat *Pengaturan Kelas & Semester*): kelas bebas per semester 1–8 (`3_1`, `5_A`), "buat cepat" N kelas, mata kuliah per semester, identitas prodi/tahun ajaran.
+- Sheet baru `Classes` dan `Settings` (dibuat otomatis). Daftar kelas dibaca dari server; `CLASS_LIST` (backend) dan `KELAS_LIST` (frontend) tidak lagi di-hardcode.
+- Mahasiswa memilih **Semester → Kelas** dari daftar saat daftar mandiri; **Profil → Ubah Kelas / Semester** (`updateStudentClass`); diminta memilih ulang bila kelasnya sudah tidak ada/nonaktif.
+- Form sesi dosen: semester dari daftar server, kelas & mata kuliah difilter per semester, semester/kelas terakhir diingat di perangkat.
+- PIN dosen opsional (SHA-256, dibatasi 10 percobaan/menit) untuk aksi pengaturan; tanpa PIN perilaku seperti sebelumnya.
+- Aksi API: `getSetupStatus`, `saveSetup`, `setClassStatus`, `deleteClass`, `createCourse`, `deleteCourse`, `updateStudentClass`. Kode penolakan baru: `CLASS_IN_USE`, `COURSE_IN_USE`, `COURSE_EXISTS`, `PIN_REQUIRED`, `PIN_INVALID`.
+- Banner "Sistem belum disiapkan" di halaman utama bila Setup Awal belum dilakukan; cache daftar kelas di perangkat (tetap tampil saat offline).
+- `code.gs` (v2.4.0) kini disertakan di repo; tes baru (backend 52, frontend 32) + uji end-to-end jsdom.
+
+### Diubah
+- `createSession`: semester diturunkan dari kelas (bukan input klien).
+- Instalasi lama: `seedDatabase()` memigrasi kelas yang sudah dipakai data ke sheet `Classes` dan menandai setup selesai (tidak perlu Setup Awal ulang). Bila sheet `Classes` masih kosong, kelas diturunkan dari data secara virtual.
+- Pesan "Belum ada mata kuliah" kini mengarah ke Pengaturan (bukan `seedDatabase()`).
+
+### Catatan
+- PIN hanya melindungi aksi pengaturan, bukan autentikasi penuh; sesi presensi/jadwal tetap tanpa login.
+- Dokumen dan tes v2.3.0 sebelumnya mengacu `code.gs` yang tidak ada di ZIP; `code.gs` v2.4.0 disusun ulang dari `backup/code.v2.2.0.gs` + perilaku 2.3.0 (cache, rate limit, `TerdaftarPada`) dan seluruh tes 2.3.0 lolos.
+
 ## [2.3.0]
 
 ### Ditambahkan

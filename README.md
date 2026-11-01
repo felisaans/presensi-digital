@@ -123,6 +123,7 @@ Dibangun **100% tanpa framework backend** — hanya memanfaatkan GitHub Pages se
 ```
 digital-attendance/
 ├── index.html      # Aplikasi utama (HTML + CSS + JS)
+├── code.gs         # Backend Google Apps Script v2.4.0 (tempel ke Apps Script; dipakai juga oleh tests/)
 ├── README.md       # Dokumentasi ini
 ├── CHANGELOG.md    # Riwayat versi
 ├── tests/          # (opsional) test otomatis — lihat bagian Testing
@@ -131,7 +132,7 @@ digital-attendance/
 
 > **Catatan**: seluruh aplikasi frontend berada dalam satu file `index.html` sesuai arsitektur single-file yang disengaja.
 
-Backend `Code.gs` **tidak di-upload ke repo** — dia hidup di Google Apps Script Editor yang terhubung ke spreadsheet.
+`code.gs` disertakan sebagai salinan acuan (dan agar tes otomatis bisa berjalan). Yang berjalan di produksi tetap salinan yang Anda tempel di Google Apps Script Editor — setelah mengubahnya, **deploy versi baru**.
 
 ---
 
@@ -223,12 +224,34 @@ MK-PWEB  | Pemrograman Web           | 5        |
 4. Klik **Deploy** → **Authorize** (Advanced → Go to unsafe → Allow)
 5. **Copy Web App URL** — format: `https://script.google.com/macros/s/AKfycb.../exec`
 
-#### 1.5 Memperbarui dari v2.2.0 ke v2.3.0
+#### 1.4b Setup Awal Kelas & Semester (BARU di v2.4.0)
+
+Daftar kelas **tidak lagi di-hardcode**. Setelah deploy, dosen menyiapkannya sekali dari aplikasi:
+
+1. Buka URL aplikasi. Pada instalasi baru muncul banner kuning **"Sistem belum disiapkan"** → tekan **Setup Awal (Dosen)** (atau tekan *Mulai Absensi*, otomatis diarahkan).
+2. **Identitas** (opsional): program studi & tahun ajaran.
+3. **Kelas per semester**: pilih semester 1–8 + kode kelas (mis. `A`, `1`) → **+**, atau **Buat cepat** (mis. semester 5 → `5_1` … `5_5`). Format kelas: `semester_kode` (`3_1`, `5_A`).
+4. **Mata kuliah** per semester (bisa dilengkapi nanti).
+5. **PIN Dosen** (opsional, 4–12 huruf/angka): melindungi halaman pengaturan dari mahasiswa.
+6. **Simpan & Selesai** → mahasiswa sekarang bisa mendaftar dan memilih semester + kelas dari daftar itu.
+
+Kelas disimpan di sheet `Classes`, pengaturan di sheet `Settings` (dibuat otomatis). Kelas yang sudah dipakai mahasiswa/jadwal/sesi **tidak bisa dihapus**, hanya dinonaktifkan. Pengaturan bisa dibuka lagi kapan saja lewat **Pengaturan Kelas & Semester (Dosen)**.
+
+> **PIN bukan autentikasi penuh.** PIN hanya melindungi aksi pengaturan (kelas & mata kuliah). Sesi presensi, jadwal, dan rekap tetap tanpa login — sama seperti sebelumnya. Hash PIN (SHA-256) disimpan di sheet `Settings`; jangan bagikan akses edit spreadsheet.
+
+#### 1.5a Memperbarui dari v2.3.0 / v2.2.0 ke v2.4.0
+
+1. Tempel `code.gs` baru ke Apps Script (ganti seluruh isi, **pertahankan `SPREADSHEET_ID`** Anda).
+2. Jalankan `seedDatabase()` sekali (aman diulang). Pada instalasi lama, kelas yang sudah dipakai data (`Students`/`Schedules`/`Sessions`) otomatis dipindah ke sheet `Classes` dan setup ditandai selesai — **tidak perlu Setup Awal ulang**. Tambah kelas/semester baru lewat Pengaturan.
+3. **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy.** URL tidak berubah.
+4. Upload `index.html` baru. Banner merah muncul bila versi backend bukan `2.4.0`.
+
+#### 1.5 Memperbarui dari v2.2.0 ke v2.3.0 (riwayat)
 
 1. Tempel `Code.gs` baru ke Apps Script (ganti seluruh isi, **pertahankan `SPREADSHEET_ID`** Anda).
 2. Jalankan `seedDatabase()` sekali (aman diulang) — memastikan kolom `TerdaftarPada` & `Sumber` ada dan terkunci sebagai teks. Tanpa langkah ini kolom tetap ditambah otomatis saat request pertama.
 3. **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy.** URL Web App tidak berubah.
-4. Upload `index.html` baru ke GitHub. Jika versi backend belum sesuai (`2.3.0`), frontend menampilkan banner merah di atas halaman.
+4. Upload `index.html` baru ke GitHub. Jika versi backend belum sesuai, frontend menampilkan banner merah di atas halaman.
 
 #### 1.6 Set Timezone
 
@@ -292,9 +315,10 @@ const CONFIG = {
 ### Alur Dosen
 
 ```
+0. (Sekali saja) Setup Awal: kelas, semester, mata kuliah — lihat 1.4b
 1. Buka URL GitHub Pages
 2. Klik "Mulai Absensi" (kanan atas)
-3. Isi form sesi (mata kuliah, kelas, pertemuan, jam)
+3. Isi form sesi: pilih semester → kelas & mata kuliah ikut terfilter (semester & kelas terakhir diingat di perangkat)
 4. Klik "Mulai Sesi Presensi"
 5. Izinkan akses kamera saat diminta
 6. Arahkan kamera ke QR mahasiswa
@@ -308,7 +332,12 @@ const CONFIG = {
 Mahasiswa yang NPM-nya belum ada di sheet `Students` dapat mendaftar sendiri:
 
 ```
-Masukkan NPM → "NPM belum terdaftar" → isi Nama Lengkap + Kelas (5_1–5_5) → Daftar & Masuk
+Masukkan NPM → "NPM belum terdaftar" → isi Nama Lengkap + pilih Semester lalu Kelas (dari daftar yang disiapkan dosen) → Daftar & Masuk
+```
+
+Mahasiswa juga bisa memperbarui kelas/semester kapan saja (mis. naik semester) lewat **Profil → Ubah Kelas / Semester**. Bila kelasnya dihapus/dinonaktifkan dosen, ia diminta memilih ulang saat login berikutnya.
+
+```
 ```
 
 - Backend (`registerStudent`) menambah baris baru di `Students`: `Status = Aktif`, `Semester` diturunkan dari kelas (`5_1` → 5), `TerdaftarPada` = waktu server (Asia/Jakarta), `Sumber = Mandiri`.
@@ -322,11 +351,11 @@ Masukkan NPM → "NPM belum terdaftar" → isi Nama Lengkap + Kelas (5_1–5_5) 
 ```
 1. Klik "Kelola Jadwal" (kiri atas halaman awal, atau tombol di bawah form Pengaturan Sesi)
 2. Filter per kelas bila perlu
-3. Tekan "Tambah" → pilih mata kuliah, kelas (5_1–5_5), hari, jam mulai/selesai, ruang → Simpan
+3. Tekan "Tambah" → pilih mata kuliah, kelas (dari daftar), hari, jam mulai/selesai, ruang → Simpan
 4. Ikon pensil = ubah, ikon tempat sampah = hapus
 ```
 
-Validasi (di frontend **dan** backend): mata kuliah harus terdaftar, hari valid (Senin–Minggu), jam selesai harus setelah jam mulai, kelas harus 5_1–5_5. Jadwal identik (mata kuliah + kelas + hari + jam mulai) ditolak.
+Validasi (di frontend **dan** backend): mata kuliah harus terdaftar, hari valid (Senin–Minggu), jam selesai harus setelah jam mulai, kelas harus salah satu kelas aktif di sheet `Classes`. Jadwal identik (mata kuliah + kelas + hari + jam mulai) ditolak.
 
 ---
 
@@ -360,6 +389,12 @@ Dari folder proyek (`code.gs` dan `backup/code.v2.2.0.gs` harus ada di tempatnya
 node tests/backend.test.js        # backend: Code.gs dimuat ke vm dengan mock Sheets/Cache/Lock
 node tests/frontend.logic.test.js # logika frontend (validasi NPM, session recovery, polling, daftar kelas)
 node tests/frontend.check.js      # node --check pada <script> inline index.html
+```
+
+Tes uji-asap end-to-end (opsional, butuh `jsdom`: `npm i jsdom`) ada di `tests/e2e.jsdom.test.js` — menjalankan frontend asli terhadap backend mock dari Setup Awal sampai mahasiswa daftar.
+
+```bash
+node tests/e2e.jsdom.test.js
 ```
 
 ### Test Lengkap
@@ -524,10 +559,24 @@ Lihat dokumentasi `PHASE 7 — Production Testing` untuk checklist lengkap 22+ i
 | NPM | String | Primary key |
 | Nama | String | Nama lengkap |
 | Semester | Number | Semester aktif |
-| Kelas | String | `5_1` … `5_5` |
+| Kelas | String | `semester_kode`, mis. `5_1`, `3_A` (harus ada di sheet `Classes`) |
 | Status | String | `Aktif` / `Nonaktif` |
 | TerdaftarPada | Timestamp (teks) | `yyyy-MM-dd HH:mm:ss` Asia/Jakarta; diisi saat daftar mandiri, kosong untuk data manual |
 | Sumber | String | `Mandiri` untuk daftar mandiri; kosong untuk data manual |
+
+### Classes (v2.4.0)
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| Kelas | String | Primary key, format `[1-8]_[A-Z0-9]{1,6}` |
+| Semester | Number | Diturunkan dari kelas (`5_A` → 5) |
+| Status | String | `Aktif` (atau kosong) / `Nonaktif` |
+
+### Settings (v2.4.0)
+| Key | Keterangan |
+|---|---|
+| `SETUP_DONE` | `TRUE` bila Setup Awal selesai |
+| `PRODI`, `TAHUN_AJARAN` | Identitas (opsional) |
+| `DOSEN_PIN_HASH` | SHA-256 PIN dosen (kosong = tanpa PIN) |
 
 ### Courses
 | Kolom | Tipe | Keterangan |
@@ -611,7 +660,13 @@ Response selalu:
 
 | Action | Data | Deskripsi |
 |---|---|---|
-| `ping` / `getVersion` | — | Cek backend & versi (`2.3.0`) |
+| `ping` / `getVersion` | — | Cek backend & versi (`2.4.0`) |
+| `getSetupStatus` | `{ admin? }` | Status setup, semester & kelas aktif (`admin:true` → semua kelas + jumlah mahasiswa) |
+| `saveSetup` | `{ classes[], prodi?, tahunAjaran?, newPin?, pin? }` | Setup Awal / tambah kelas (idempotent). Perlu `pin` bila PIN sudah di-set |
+| `setClassStatus` | `{ kelas, aktif, pin? }` | Aktif/nonaktifkan kelas |
+| `deleteClass` | `{ kelas, pin? }` | Hapus kelas (ditolak `CLASS_IN_USE` bila dipakai) |
+| `createCourse` / `deleteCourse` | `{ mataKuliah, semester, dosen?, pin? }` / `{ courseId, pin? }` | Kelola mata kuliah |
+| `updateStudentClass` | `{ npm, kelas }` | Mahasiswa mengganti kelas/semester |
 | `getStudent` | `{ npm }` | Ambil data mahasiswa |
 | `registerStudent` | `{ npm, nama, kelas }` | Daftar mandiri (rate limit 10/menit) |
 | `getCourses` | `{ semester? }` | Daftar mata kuliah |
